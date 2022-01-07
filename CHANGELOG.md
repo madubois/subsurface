@@ -1,3 +1,4 @@
+- mobile: Add a dark theme for statistics
 - core: avoid crash with corrupted cloud storage
 - mobile: fix profile scaling issue on high DPR devices
 - mobile/Android: add logfiles as attachment to support emails
