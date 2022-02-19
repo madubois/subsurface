@@ -9,6 +9,7 @@
 #include <vector>
 #include <memory>
 
+struct dive;
 class ProfileWidget2;
 class EmptyView;
 class QStackedWidget;
@@ -21,18 +22,25 @@ public:
 	std::unique_ptr<ProfileWidget2> view;
 	void plotCurrentDive();
 	void setPlanState(const struct dive *d, int dc);
-	void setEditState(const struct dive *d, int dc);
 	void setEnabledToolbar(bool enabled);
 private
 slots:
 	void unsetProfHR();
 	void unsetProfTissues();
+	void stopAdded();
+	void stopRemoved(int count);
+	void stopMoved(int count);
 private:
 	std::unique_ptr<EmptyView> emptyView;
 	std::vector<QAction *> toolbarActions;
 	Ui::ProfileWidget ui;
 	QStackedWidget *stack;
 	void setDive(const struct dive *d);
+	void editDive();
+	void exitEditMode();
+	std::unique_ptr<dive> editedDive;
+	int editedDc;
+	dive *originalDive;
 };
 
 #endif // PROFILEWIDGET_H
