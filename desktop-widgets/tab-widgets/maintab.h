@@ -51,7 +51,6 @@ slots:
 	void on_rating_valueChanged(int value);
 	void on_tagWidget_editingFinished();
 	void closeWarning();
-	void escDetected(void);
 	void updateDateTimeFields();
 	void colorsChanged();
 private:

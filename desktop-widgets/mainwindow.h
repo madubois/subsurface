@@ -159,6 +159,7 @@ slots:
 	// Some shortcuts like "change DC" or "copy/paste dive components"
 	// should only be enabled when the profile's visible.
 	void startDiveSiteEdit();
+	void escPressed();
 
 private:
 	ApplicationState appState;

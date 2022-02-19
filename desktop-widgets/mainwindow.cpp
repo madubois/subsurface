@@ -212,6 +212,9 @@ MainWindow::MainWindow() : QMainWindow(),
 	redoAction->setShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_Z));
 	ui.menu_Edit->addActions({ undoAction, redoAction });
 
+	QShortcut *closeKey = new QShortcut(QKeySequence(Qt::Key_Escape), this);
+	connect(closeKey, &QShortcut::activated, this, &MainWindow::escPressed);
+
 #ifndef NO_PRINTING
 	// copy the bundled print templates to the user path
 	QStringList templateBackupList;
@@ -373,6 +376,12 @@ void MainWindow::on_actionOpen_triggered()
 		cleanFilenames << filename;
 	}
 	loadFiles(cleanFilenames);
+}
+
+void MainWindow::escPressed()
+{
+	profile->escPressed();
+	mainTab->stealFocus();
 }
 
 void MainWindow::on_actionSave_triggered()

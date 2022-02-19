@@ -13,6 +13,7 @@
 #include <QHBoxLayout>
 #include <QStackedWidget>
 #include <QLabel>
+#include <QKeyEvent>
 
 // A resizing display of the Subsurface logo when no dive is shown
 class EmptyView : public QLabel {
@@ -177,6 +178,15 @@ void ProfileWidget::setDive(const struct dive *d)
 	ui.profScaled->setDisabled(false); // measuring and scaling
 	ui.profTogglePicture->setDisabled(false);
 	ui.profHR->setDisabled(false);
+}
+
+void ProfileWidget::escPressed()
+{
+	if (!editedDive)
+		return;
+
+	exitEditMode();
+	plotCurrentDive();
 }
 
 void ProfileWidget::plotCurrentDive()

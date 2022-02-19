@@ -23,6 +23,7 @@ public:
 	void plotCurrentDive();
 	void setPlanState(const struct dive *d, int dc);
 	void setEnabledToolbar(bool enabled);
+	void escPressed();
 private
 slots:
 	void unsetProfHR();

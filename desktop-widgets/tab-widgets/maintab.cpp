@@ -100,9 +100,6 @@ MainTab::MainTab(QWidget *parent) : QTabWidget(parent),
 	connect(action, &QAction::triggered, this, &MainTab::closeWarning);
 	ui.multiDiveWarningMessage->addAction(action);
 
-	QShortcut *closeKey = new QShortcut(QKeySequence(Qt::Key_Escape), this);
-	connect(closeKey, &QShortcut::activated, this, &MainTab::escDetected);
-
 	if (qApp->style()->objectName() == "oxygen")
 		setDocumentMode(true);
 	else
@@ -561,11 +558,6 @@ void MainTab::on_rating_valueChanged(int value)
 void MainTab::stealFocus()
 {
 	setFocus();
-}
-
-void MainTab::escDetected()
-{
-	stealFocus();
 }
 
 void MainTab::clearTabs()
