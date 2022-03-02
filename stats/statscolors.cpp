@@ -158,12 +158,16 @@ private:
 // The themes are generated on first use. Thus, the constructors are run
 // once the overall application is initialized. This ensures that the themes'
 // constructors can access the settings, etc.
-static std::array<std::unique_ptr<const StatsTheme>, 2> statsThemes;
+// Note that the allocated themes leak. When automatically freeing them by
+// means of a unique_ptr, we get spurious crashes on exit. Possibly, because
+// QFonts can't be freed post application exit. We could free the themes
+// explicitly, but it seems hardly worth it.
+static std::array<const StatsTheme *, 2> statsThemes;
 const StatsTheme &getStatsTheme(bool dark)
 {
 	if (!statsThemes[0]) {
-		statsThemes[0].reset(new StatsThemeLight);
-		statsThemes[1].reset(new StatsThemeDark);
+		statsThemes[0] = new StatsThemeLight;
+		statsThemes[1] = new StatsThemeDark;
 	}
 	return *statsThemes[dark ? 1 : 0];
 }
