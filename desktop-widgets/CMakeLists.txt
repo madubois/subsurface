@@ -48,6 +48,7 @@ set (SUBSURFACE_UI
 	urldialog.ui
 	webservices.ui
 	tab-widgets/maintab.ui
+	tab-widgets/TabDiveNotes.ui
 	tab-widgets/TabDiveStatistics.ui
 	tab-widgets/TabDiveInformation.ui
 	tab-widgets/TabDivePhotos.ui
@@ -114,6 +115,8 @@ set(SUBSURFACE_INTERFACE
 	subsurfacewebservices.h
 	tab-widgets/TabBase.cpp
 	tab-widgets/TabBase.h
+	tab-widgets/TabDiveNotes.cpp
+	tab-widgets/TabDiveNotes.h
 	tab-widgets/TabDiveExtraInfo.cpp
 	tab-widgets/TabDiveExtraInfo.h
 	tab-widgets/TabDiveEquipment.cpp
