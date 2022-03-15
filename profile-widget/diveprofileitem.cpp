@@ -772,6 +772,7 @@ void DiveReportedCeiling::paint(QPainter *painter, const QStyleOptionGraphicsIte
 		return;
 	QGraphicsPolygonItem::paint(painter, option, widget);
 }
+#include <QDebug>
 
 void PartialPressureGasItem::replot(const dive *, int fromIn, int toIn, bool)
 {
@@ -788,11 +789,14 @@ void PartialPressureGasItem::replot(const dive *, int fromIn, int toIn, bool)
 	if (thresholdPtrMin)
 		threshold_min = *thresholdPtrMin;
 	bool inAlertFragment = false;
+	//ON fixe manuellement le threshold... à réparer ici
+	threshold_max = 1;
 	for (int i = from; i < to; i++) {
 		auto [time, value] = getPoint(i);
 		QPointF point(hAxis.posAtValue(time), vAxis.posAtValue(value));
 		poly.push_back(point);
-		if (thresholdPtrMax && value >= threshold_max) {
+		//NORMALEMENT CE DEVRAIT ETRE >= ICI, mais on inverse pour inverser les couleurs
+		if (thresholdPtrMax && value < threshold_max) {
 			if (inAlertFragment) {
 				alertPolygons.back().push_back(point);
 			} else {
