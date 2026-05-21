@@ -244,10 +244,10 @@ static void parse_dive_location(char *, struct git_parser_state *state)
 	}
 }
 
-static void parse_dive_diveguide(char *, struct git_parser_state *state)
-{ state->active_dive->diveguide = get_first_converted_string_c(state); }
-
 static void parse_dive_buddy(char *, struct git_parser_state *state)
+{ state->active_dive->buddy = get_first_converted_string_c(state); }
+
+static void parse_dive_divemaster(char *, struct git_parser_state *state)
 { state->active_dive->buddy = get_first_converted_string_c(state); }
 
 static void parse_dive_suit(char *, struct git_parser_state *state)
@@ -1091,10 +1091,8 @@ static void divecomputer_parser(char *line, struct git_parser_state *state)
 static const std::array dive_action {
 #undef D
 #define D(x) keyword_action { #x, parse_dive_ ## x }
-	/* For historical reasons, we accept divemaster and diveguide */
-	D(airpressure), D(airtemp), D(buddy), D(chill), D(current), D(cylinder), D(diveguide),
-	keyword_action { "divemaster", parse_dive_diveguide },
-	D(divesiteid), D(duration), D(gps), D(invalid), D(location), D(notes), D(notrip), D(rating), D(suit), D(surge),
+	D(airpressure), D(airtemp), D(buddy), D(chill), D(current), D(cylinder),
+	D(divesiteid), D(divemaster), D(duration), D(gps), D(invalid), D(location), D(notes), D(notrip), D(rating), D(suit), D(surge),
 	D(tags), D(visibility), D(watersalinity), D(watertemp), D(wavesize), D(weightsystem)
 };
 
