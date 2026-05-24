@@ -10,6 +10,7 @@
 #include "core/device.h"
 #include "core/divecomputer.h"
 #include "core/event.h"
+#include "core/extradata.h"
 #include "core/pref.h"
 #include "core/profile.h"
 #include "core/qthelper.h"	// for decoMode()
@@ -19,33 +20,56 @@
 #include "qt-models/diveplannermodel.h"
 #include <QAbstractAnimation>
 #include <QRegularExpression>
+#include <cstring>
 
 static const double diveComputerTextBorder = 1.0;
 
-// Extract deco model info (GF or VPM-B conservatism) from dive notes
+// Extract deco model info (GF or VPM-B conservatism) from dive extra_data or notes
 // Returns true if found, with values populated
-static bool extractDecoModelFromNotes(const struct dive *dive, int &gflow, int &gfhigh, int &vpmb_conservatism)
+static bool extractDecoModelFromDive(const struct dive *dive, const struct divecomputer *dc, int &gflow, int &gfhigh, int &vpmb_conservatism)
 {
-	if (!dive || !dive->notes)
+	if (!dive || !dc)
 		return false;
 
-	QString notes(dive->notes);
-	
-	// Try to extract Bühlmann GF values
-	QRegularExpression gf_pattern(R"(GFLow\s*=\s*(\d+)%?\s*and\s*GFHigh\s*=\s*(\d+)%?)");
-	QRegularExpressionMatch gf_match = gf_pattern.match(notes);
-	if (gf_match.hasMatch()) {
-		gflow = gf_match.captured(1).toInt();
-		gfhigh = gf_match.captured(2).toInt();
-		return true;
+	// First, try to extract from extra_data (some dive computers store this)
+	struct extra_data *ed = dc->extra_data;
+	bool found_gf_lo = false, found_gf_hi = false;
+	while (ed) {
+		if (strcmp(ed->key, "GF-Lo") == 0 || strcmp(ed->key, "GFLo") == 0) {
+			gflow = atoi(ed->value);
+			found_gf_lo = true;
+		} else if (strcmp(ed->key, "GF-Hi") == 0 || strcmp(ed->key, "GFHi") == 0) {
+			gfhigh = atoi(ed->value);
+			found_gf_hi = true;
+		} else if (strcmp(ed->key, "VPM-B-Conservatism") == 0) {
+			vpmb_conservatism = atoi(ed->value);
+			return true;
+		}
+		ed = ed->next;
 	}
-
-	// Try to extract VPM-B conservatism value
-	QRegularExpression vpmb_pattern(R"(VPM-B.*?\+(\d+)\s*conservatism)");
-	QRegularExpressionMatch vpmb_match = vpmb_pattern.match(notes);
-	if (vpmb_match.hasMatch()) {
-		vpmb_conservatism = vpmb_match.captured(1).toInt();
+	if (found_gf_lo && found_gf_hi)
 		return true;
+
+	// Then, try to extract from dive notes (for planned dives)
+	if (dive->notes) {
+		QString notes(dive->notes);
+		
+		// Try to extract Bühlmann GF values (may be in HTML, so be flexible with whitespace/tags)
+		QRegularExpression gf_pattern(R"(GFLow\s*=\s*(\d+)%?\s*(?:and|<[^>]*>)*\s*GFHigh\s*=\s*(\d+)%?)");
+		QRegularExpressionMatch gf_match = gf_pattern.match(notes);
+		if (gf_match.hasMatch()) {
+			gflow = gf_match.captured(1).toInt();
+			gfhigh = gf_match.captured(2).toInt();
+			return true;
+		}
+
+		// Try to extract VPM-B conservatism value
+		QRegularExpression vpmb_pattern(R"(VPM-B.*?\+(\d+)\s*conservatism)");
+		QRegularExpressionMatch vpmb_match = vpmb_pattern.match(notes);
+		if (vpmb_match.hasMatch()) {
+			vpmb_conservatism = vpmb_match.captured(1).toInt();
+			return true;
+		}
 	}
 
 	return false;
@@ -446,10 +470,18 @@ void ProfileScene::plotDive(const struct dive *dIn, int dcIn, DivePlannerPointsM
 		return;
 	}
 
+	const struct divecomputer *currentdc = get_dive_dc_const(d, dc);
+	if (!currentdc || !currentdc->samples) {
+		clear();
+		return;
+	}
+
 	if (!plannerModel) {
 		int gflow = prefs.gflow, gfhigh = prefs.gfhigh, vpmb_conservatism = prefs.vpmb_conservatism;
-		// Try to extract the deco model info from dive notes (if available)
-		extractDecoModelFromNotes(d, gflow, gfhigh, vpmb_conservatism);
+		// Try to extract the deco model info from dive extra_data or notes (if available)
+		if (!extractDecoModelFromDive(d, currentdc, gflow, gfhigh, vpmb_conservatism)) {
+			// Fallback to current preferences if not found in dive
+		}
 
 		if (decoMode(false) == VPMB)
 			decoModelParameters->set(QString("Subsurface VPM-B +%1").arg(vpmb_conservatism), getColor(PRESSURE_TEXT));
@@ -461,12 +493,6 @@ void ProfileScene::plotDive(const struct dive *dIn, int dcIn, DivePlannerPointsM
 			decoModelParameters->set(QString("VPM-B +%1").arg(diveplan.vpmb_conservatism), getColor(PRESSURE_TEXT));
 		else
 			decoModelParameters->set(QString("GF %1/%2").arg(diveplan.gflow).arg(diveplan.gfhigh), getColor(PRESSURE_TEXT));
-	}
-
-	const struct divecomputer *currentdc = get_dive_dc_const(d, dc);
-	if (!currentdc || !currentdc->samples) {
-		clear();
-		return;
 	}
 
 	// If we come from the empty state, the plot info has to be recalculated.
