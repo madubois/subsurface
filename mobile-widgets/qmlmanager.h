@@ -35,7 +35,6 @@ class QMLManager : public QObject {
 	Q_PROPERTY(QString notificationText MEMBER m_notificationText WRITE setNotificationText NOTIFY notificationTextChanged)
 	Q_PROPERTY(QStringList suitList READ suitList NOTIFY suitListChanged)
 	Q_PROPERTY(QStringList buddyList READ buddyList NOTIFY buddyListChanged)
-	Q_PROPERTY(QStringList diveguideList READ diveguideList NOTIFY diveguideListChanged)
 	Q_PROPERTY(QStringList locationList READ locationList NOTIFY locationListChanged)
 	Q_PROPERTY(QStringList cylinderListInit READ cylinderListInit CONSTANT)
 	Q_PROPERTY(QStringList defaultCylinderListInit READ defaultCylinderListInit CONSTANT)
@@ -146,7 +145,6 @@ public:
 
 	QStringList suitList() const;
 	QStringList buddyList() const;
-	QStringList diveguideList() const;
 	QStringList locationList() const;
 	QStringList cylinderListInit() const;
 	QStringList defaultCylinderListInit() const;
@@ -172,7 +170,7 @@ public slots:
 	void commitChanges(QString diveId, QString number, QString date, QString location, QString gps,
 			   QString duration, QString depth, QString airtemp,
 			   QString watertemp, QString suit, QString buddy,
-			   QString diveGuide, QString tags, QString weight, QString notes, QStringList startpressure,
+			   QString tags, QString weight, QString notes, QStringList startpressure,
 			   QStringList endpressure, QStringList gasmix, QStringList usedCylinder, int rating, int visibility, QString state);
 	void updateTripDetails(QString tripIdString, QString tripLocation, QString tripNotes);
 	void removeDiveFromTrip(int id);
@@ -189,7 +187,6 @@ public slots:
 	void pasteDiveData(int id);
 	bool toggleDiveSite(bool toggle);
 	bool toggleNotes(bool toggle);
-	bool toggleDiveGuide(bool toggle);
 	bool toggleBuddy(bool toggle);
 	bool toggleSuit(bool toggle);
 	bool toggleRating(bool toggle);
@@ -227,7 +224,6 @@ public slots:
 private:
 	BuddyCompletionModel buddyModel;
 	SuitCompletionModel suitModel;
-	DiveGuideCompletionModel diveguideModel;
 	DiveSiteSortedModel locationModel;
 	QString m_startPageText;
 	QString m_lastError;
@@ -287,7 +283,6 @@ signals:
 	void btEnabledChanged();
 	void suitListChanged();
 	void buddyListChanged();
-	void diveguideListChanged();
 	void locationListChanged();
 	void cloudCacheListChanged();
 	void waitingForPositionChanged();

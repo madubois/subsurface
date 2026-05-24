@@ -370,7 +370,6 @@ static void write_one_dive(struct membuffer *b, struct dive *dive, const char *p
 	put_HTML_watertemp(b, dive, "\"water\":\"", "\"");
 	put_string(b, "	},");
 	write_attribute(b, "buddy", dive->buddy, ", ");
-	write_attribute(b, "diveguide", dive->diveguide, ", ");
 	write_attribute(b, "suit", dive->suit, ", ");
 	put_HTML_tags(b, dive, "\"tags\":", ",");
 	if (!list_only) {
@@ -526,8 +525,6 @@ void export_translation(const char *file_name)
 	write_attribute(&buf, "Surge", translate("gettextFromC", "Surge"), ", ");
 	write_attribute(&buf, "Chill", translate("gettextFromC", "Chill"), ", ");
 	write_attribute(&buf, "Duration", translate("gettextFromC", "Duration"), ", ");
-	write_attribute(&buf, "DiveGuide", translate("gettextFromC", "Diveguide"), ", ");
-	write_attribute(&buf, "DiveMaster", translate("gettextFromC", "Divemaster"), ", ");
 	write_attribute(&buf, "Buddy", translate("gettextFromC", "Buddy"), ", ");
 	write_attribute(&buf, "Suit", translate("gettextFromC", "Suit"), ", ");
 	write_attribute(&buf, "Tags", translate("gettextFromC", "Tags"), ", ");

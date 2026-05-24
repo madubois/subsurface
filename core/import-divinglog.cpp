@@ -289,9 +289,6 @@ static int divinglog_dive(void *param, int, char **data, char **)
 	if (data[6])
 		state->cur_dive->dc.duration.seconds = atoi(data[6]) * 60;
 
-	if (data[7])
-		utf8_string(data[7], &state->cur_dive->diveguide);
-
 	if (data[8])
 		state->cur_dive->airtemp.mkelvin = C_to_mkelvin(atol(data[8]));
 

@@ -20,8 +20,6 @@ Item {
 	property alias suitText: suitBox.editText
 	property alias buddyIndex: buddyBox.currentIndex
 	property alias buddyText: buddyBox.editText
-	property alias diveguideIndex: diveguideBox.currentIndex
-	property alias diveguideText: diveguideBox.editText
 	property alias tagText: txtTag.text
 	property alias cylinderIndex0: cylinderBox0.currentIndex
 	property alias cylinderIndex1: cylinderBox1.currentIndex
@@ -36,7 +34,6 @@ Item {
 	property var endpressure: []
 	property var startpressure: []
 	property alias suitModel: suitBox.model
-	property alias diveguideModel: diveguideBox.model
 	property alias buddyModel: buddyBox.model
 	property alias cylinderModel0: cylinderBox0.model
 	property alias cylinderModel1: cylinderBox1.model
@@ -64,11 +61,9 @@ Item {
 		detailsEdit.depthText = ""
 		detailsEdit.airtempText = ""
 		detailsEdit.watertempText = ""
-		detailsEdit.diveguideText = ""
 		detailsEdit.buddyText = ""
 		suitBox.currentIndex = -1
 		buddyBox.currentIndex = -1
-		diveguideBox.currentIndex = -1
 		cylinderBox0.currentIndex = -1
 		cylinderBox1.currentIndex = -1
 		cylinderBox2.currentIndex = -1
@@ -118,7 +113,7 @@ Item {
 		// apply the changes to the dive_table
 		manager.commitChanges(dive_id, detailsEdit.number, detailsEdit.dateText, locationBox.editText, detailsEdit.gpsText, detailsEdit.durationText,
 				      detailsEdit.depthText, detailsEdit.airtempText, detailsEdit.watertempText,
-				      suitBox.editText, buddyBox.editText, diveguideBox.editText, detailsEdit.tagText,
+				      suitBox.editText, buddyBox.editText, detailsEdit.tagText,
 				      detailsEdit.weightText, detailsEdit.notesText, startpressure,
 				      endpressure, usedGas, usedCyl,
 				      detailsEdit.rating,
@@ -289,20 +284,6 @@ Item {
 					flickable: detailsEditFlickable
 					model: diveDetailsListView.currentItem && diveDetailsListView.currentItem.modelData !== null ?
 						       manager.buddyList : null
-				}
-			}
-			RowLayout {
-				width: Kirigami.Units.gridUnit * 20
-				TemplateLabelSmall {
-					Layout.preferredWidth: Kirigami.Units.gridUnit * 4
-					horizontalAlignment: Text.AlignRight
-					text: qsTr("Dive guide:")
-				}
-				TemplateEditComboBox {
-					id: diveguideBox
-					flickable: detailsEditFlickable
-					model: diveDetailsListView.currentItem && diveDetailsListView.currentItem.modelData !== null ?
-						       manager.diveguideList : null
 				}
 			}
 			RowLayout {

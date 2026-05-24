@@ -517,14 +517,6 @@ Item {
 		// fifth row
 		//-----------
 		TemplateLabelSmall {
-			text: qsTr("Dive guide:")
-			opacity: 0.6
-			wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-			Layout.maximumWidth: detailsView.col1Width
-			Layout.bottomMargin: 0
-			color: subsurfaceTheme.textColor
-		}
-		TemplateLabelSmall {
 			text: qsTr("Buddy:")
 			opacity: 0.6
 			wrapMode: Text.WrapAtWordBoundaryOrAnywhere
@@ -534,15 +526,6 @@ Item {
 			color: subsurfaceTheme.textColor
 		}
 
-		// sixth row
-		//-----------
-		TemplateLabelSmall {
-			id: txtDiveGuide
-			text: diveGuide
-			wrapMode: TextEdit.WrapAtWordBoundaryOrAnywhere
-			Layout.maximumWidth: detailsView.col1Width
-			color: subsurfaceTheme.textColor
-		}
 		TemplateLabelSmall {
 			id: txtBuddy
 			text: buddy

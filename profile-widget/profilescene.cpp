@@ -18,8 +18,38 @@
 #include "core/settings/qPrefDisplay.h"
 #include "qt-models/diveplannermodel.h"
 #include <QAbstractAnimation>
+#include <QRegularExpression>
 
 static const double diveComputerTextBorder = 1.0;
+
+// Extract deco model info (GF or VPM-B conservatism) from dive notes
+// Returns true if found, with values populated
+static bool extractDecoModelFromNotes(const struct dive *dive, int &gflow, int &gfhigh, int &vpmb_conservatism)
+{
+	if (!dive || !dive->notes)
+		return false;
+
+	QString notes(dive->notes);
+	
+	// Try to extract Bühlmann GF values
+	QRegularExpression gf_pattern(R"(GFLow\s*=\s*(\d+)%?\s*and\s*GFHigh\s*=\s*(\d+)%?)");
+	QRegularExpressionMatch gf_match = gf_pattern.match(notes);
+	if (gf_match.hasMatch()) {
+		gflow = gf_match.captured(1).toInt();
+		gfhigh = gf_match.captured(2).toInt();
+		return true;
+	}
+
+	// Try to extract VPM-B conservatism value
+	QRegularExpression vpmb_pattern(R"(VPM-B.*?\+(\d+)\s*conservatism)");
+	QRegularExpressionMatch vpmb_match = vpmb_pattern.match(notes);
+	if (vpmb_match.hasMatch()) {
+		vpmb_conservatism = vpmb_match.captured(1).toInt();
+		return true;
+	}
+
+	return false;
+}
 
 // Class for animations (if any). Might want to do our own.
 class ProfileAnimation : public QAbstractAnimation {
@@ -417,10 +447,14 @@ void ProfileScene::plotDive(const struct dive *dIn, int dcIn, DivePlannerPointsM
 	}
 
 	if (!plannerModel) {
+		int gflow = prefs.gflow, gfhigh = prefs.gfhigh, vpmb_conservatism = prefs.vpmb_conservatism;
+		// Try to extract the deco model info from dive notes (if available)
+		extractDecoModelFromNotes(d, gflow, gfhigh, vpmb_conservatism);
+
 		if (decoMode(false) == VPMB)
-			decoModelParameters->set(QString("VPM-B +%1").arg(prefs.vpmb_conservatism), getColor(PRESSURE_TEXT));
+			decoModelParameters->set(QString("Subsurface VPM-B +%1").arg(vpmb_conservatism), getColor(PRESSURE_TEXT));
 		else
-			decoModelParameters->set(QString("GF %1/%2").arg(prefs.gflow).arg(prefs.gfhigh), getColor(PRESSURE_TEXT));
+			decoModelParameters->set(QString("Subsurface GF %1/%2").arg(gflow).arg(gfhigh), getColor(PRESSURE_TEXT));
 	} else {
 		struct diveplan &diveplan = plannerModel->getDiveplan();
 		if (decoMode(inPlanner) == VPMB)

@@ -1,0 +1,12 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^cd /home/madubois/Code/subsurface/build && make -j\\$\\(nproc\\)$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd /home/madubois/Code/subsurface/core && python3 << 'EOF'\nactions = \\[\"airpressure\", \"airtemp\", \"buddy\", \"chill\", \"current\", \"cylinder\",\n           \"divesiteid\", \"duration\", \"gps\", \"invalid\", \"location\", \"notes\", \"notrip\", \"rating\", \"suit\", \"surge\",\n           \"tags\", \"visibility\", \"watersalinity\", \"watertemp\", \"wavesize\", \"weightsystem\"\\]\nprint\\(\"Current actions \\(sorted\\):\"\\)\nfor a in sorted\\(actions\\):\n    print\\(f\"  \\{a\\}\"\\)\n\nactions_with_divemaster = actions \\+ \\[\"divemaster\"\\]\nprint\\(\"\\\\nWith divemaster added and sorted:\"\\)\nfor a in sorted\\(actions_with_divemaster\\):\n    print\\(f\"  \\{a\\}\"\\)\nEOF\n$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}

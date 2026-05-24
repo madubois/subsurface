@@ -40,7 +40,6 @@ public:
 		TAGS,
 		PHOTOS,
 		BUDDIES,
-		DIVEGUIDE,
 		COUNTRY,
 		LOCATION,
 		NOTES,

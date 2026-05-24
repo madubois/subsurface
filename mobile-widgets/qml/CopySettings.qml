@@ -57,18 +57,6 @@ Kirigami.ScrollablePage {
 				}
 			}
 			Controls.Label {
-				text: qsTr("Dive guide")
-				font.pointSize: subsurfaceTheme.regularPointSize
-				Layout.preferredWidth: gridWidth * 0.75
-			}
-			SsrfSwitch {
-				checked: manager.toggleDiveGuide(false)
-				Layout.preferredWidth: gridWidth * 0.25
-				onClicked: {
-					manager.toggleDiveGuide(true)
-				}
-			}
-			Controls.Label {
 				text: qsTr("Buddy")
 				font.pointSize: subsurfaceTheme.regularPointSize
 				Layout.preferredWidth: gridWidth * 0.75

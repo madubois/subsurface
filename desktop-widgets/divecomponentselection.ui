@@ -116,13 +116,6 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="0">
-       <widget class="QCheckBox" name="diveguide">
-        <property name="text">
-         <string>Dive guide</string>
-        </property>
-       </widget>
-      </item>
       <item row="0" column="1">
        <widget class="QCheckBox" name="suit">
         <property name="text">

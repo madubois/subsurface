@@ -223,13 +223,12 @@ function getExpanded(dive)
 {
 	var res = '<table><tr><td class="words">' + translate.Date + ': </td><td>' + dive.date +
 		  '</td><td class="words">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + translate.Time + ': </td><td>' + dive.time +
-		  '</td><td class="words">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + translate.Location + ': </td><td>' + '<a onclick=\"Search_list_Modules(\'' + dive.location + '\', {location:true, diveguide:false, buddy:false, notes:false, tags:false,})\">' + dive.location + '</a>' + getDiveCoor(dive) +
+		  '</td><td class="words">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + translate.Location + ': </td><td>' + '<a onclick=\"Search_list_Modules(\'' + dive.location + '\', {location:true, buddy:false, notes:false, tags:false,})\">' + dive.location + '</a>' + getDiveCoor(dive) +
 		  '</td></tr></table>' +
 		  '<table><tr><td class="words">' + translate.Air_Temp + ': </td><td>' + dive.temperature.air +
 		  '</td><td class="words">&nbsp;&nbsp;&nbsp;&nbsp;' + translate.Water_Temp + ': </td><td>' + dive.temperature.water +
 		  '</td><td class="words">&nbsp;&nbsp;&nbsp;&nbsp;' + translate.Rating + ':</td><td>' + putRating(dive.rating) +
 		  '</td></tr></table><table><tr><td class="words">' + translate.Max_Depth + ': </td><td>' + put_depth_unit(dive.maxdepth) + " " + depth_unit + '</td></tr><tr><td class="words">' + translate.Duration + ': </td><td>' + dive.dive_duration +
-		  '</td></tr><tr><td class="words">' + translate.DiveGuide + ': </td><td>' + dive.diveguide +
 		  '</td></tr><tr><td class="words"><p>' + translate.Buddy + ': </p></td><td>' + dive.buddy +
 		  '</td></tr><tr><td class="words">' + translate.Suit + ': </td><td>' + dive.suit +
 		  '</td></tr><tr><td class="words">' + translate.Tags + ': </td><td>' + putTags(dive.tags) +
@@ -244,7 +243,7 @@ function putTags(tags)
 {
 	var result = "";
 	for (var i in tags) {
-		result += '<a onclick=\"Search_list_Modules(\'' + tags[i] + '\', {location:false, diveguide:false, buddy:false, notes:false, tags:true,})\">' + tags[i] + '</a>';
+		result += '<a onclick=\"Search_list_Modules(\'' + tags[i] + '\', {location:false, buddy:false, notes:false, tags:true,})\">' + tags[i] + '</a>';
 		if (i < tags.length - 1)
 			result += ', ';
 	}
@@ -556,7 +555,6 @@ function SearchModules(searchfor, searchOptions)
 	if (searchOptions === null) {
 		searchOptions = {};
 		searchOptions.location = searchingModules["location"].enabled;
-		searchOptions.diveguide = searchingModules["diveguide"].enabled;
 		searchOptions.buddy = searchingModules["buddy"].enabled;
 		searchOptions.notes = searchingModules["notes"].enabled;
 		searchOptions.tags = searchingModules["tags"].enabled;
@@ -567,9 +565,6 @@ function SearchModules(searchfor, searchOptions)
 
 		if (searchOptions.location === true)
 			keywordResult.Union(searchingModules["location"].search(keywords[i]));
-
-		if (searchOptions.diveguide === true)
-			keywordResult.Union(searchingModules["diveguide"].search(keywords[i]));
 
 		if (searchOptions.buddy === true)
 			keywordResult.Union(searchingModules["buddy"].search(keywords[i]));
@@ -965,7 +960,7 @@ function get_dive_HTML(dive)
 {
 	var table1 = '<h2 class="det_hed">' + translate.Dive_information + '</h2><table><tr><td class="words">' + translate.Date + ': </td><td>' + dive.date +
 		  '</td><td class="words">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + translate.Time + ': </td><td>' + dive.time +
-		  '</td><td class="words">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + translate.Location + ': </td><td>' + '<a onclick=\"Search_list_Modules(\'' + dive.location + '\', {location:true, diveguide:false, buddy:false, notes:false, tags:false,})\">' + dive.location + '</a></td>' + getDiveCoor(dive) +
+		  '</td><td class="words">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + translate.Location + ': </td><td>' + '<a onclick=\"Search_list_Modules(\'' + dive.location + '\', {location:true, buddy:false, notes:false, tags:false,})\">' + dive.location + '</a></td>' + getDiveCoor(dive) +
 		  '</tr></table>';
 	var table2 = '<table><tr><td class="words">' + translate.Rating + ':</td><td>' + putRating(dive.rating) + '</td>';
 	if (dive.wavesize > 0)
@@ -982,7 +977,6 @@ function get_dive_HTML(dive)
 	var table3 = '<table><tr><td class="words">' + translate.Air_Temp + ': </td><td>' + dive.temperature.air +
 		  '</td><td class="words">&nbsp;&nbsp;&nbsp;&nbsp;' + translate.Water_Temp + ': </td><td>' + dive.temperature.water +
 		  '</td></tr></table><table><tr><td class="words">' + translate.Max_Depth + ': </td><td>' + put_depth_unit(dive.maxdepth) + " " + depth_unit + '</td></tr><tr><td class="words">' + translate.Duration + ': </td><td>' + dive.dive_duration +
-		  '</td></tr><tr><td class="words">' + translate.DiveGuide + ': </td><td>' + dive.diveguide +
 		  '</td></tr><tr><td class="words"><p>' + translate.Buddy + ': </p></td><td>' + dive.buddy +
 		  '</td></tr><tr><td class="words">' + translate.Suit + ': </td><td>' + dive.suit +
 		  '</td></tr><tr><td class="words">' + translate.Tags + ': </td><td>' + putTags(dive.tags) +

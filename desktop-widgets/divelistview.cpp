@@ -74,7 +74,6 @@ DiveListView::DiveListView(QWidget *parent) : QTreeView(parent),
 					  i == DiveTripModelBase::DURATION ||
 					  i == DiveTripModelBase::PHOTOS ||
 					  i == DiveTripModelBase::BUDDIES ||
-					  i == DiveTripModelBase::DIVEGUIDE ||
 					  i == DiveTripModelBase::COUNTRY ||
 					  i == DiveTripModelBase::LOCATION;
 		bool shown = s.value(settingName, showHeaderFirstRun).toBool();

@@ -576,7 +576,7 @@ static bool uemis_get_answer(const char *path, const char *request, int n_param_
 	}
 	str_append_with_delim(sb, "");
 	file_length = strlen(sb);
-	snprintf(fl, 10, "%08d", file_length - 13);
+	snprintf(fl, sizeof(fl), "%08d", file_length - 13);
 	memcpy(sb + 5, fl, strlen(fl));
 #if UEMIS_DEBUG & 4
 	fprintf(debugfile, "::w req.txt \"%s\"\n", sb);

@@ -540,10 +540,6 @@ QVariant TemplateLayout::getValue(QString list, QString property, const State &s
 			return get_depth_string(d->dc.maxdepth.mm, true, true);
 		} else if (property == "meandepth") {
 			return get_depth_string(d->dc.meandepth.mm, true, true);
-		} else if (property == "divemaster") {
-			return d->diveguide;
-		} else if (property == "diveguide") {
-			return d->diveguide;
 		} else if (property == "buddy") {
 			return d->buddy;
 		} else if (property == "airTemp") {

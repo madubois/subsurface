@@ -1332,10 +1332,6 @@ static void try_to_fill_dive(struct dive *dive, const char *name, char *buf, str
 	if (MATCH("notes", utf8_string, &dive->notes))
 		return;
 	// For historic reasons, we accept dive guide as well as dive master
-	if (MATCH("diveguide", utf8_string, &dive->diveguide))
-		return;
-	if (MATCH("divemaster", utf8_string, &dive->diveguide))
-		return;
 	if (MATCH("buddy", utf8_string, &dive->buddy))
 		return;
 	if (MATCH("watersalinity", salinity, &dive->user_salinity))

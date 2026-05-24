@@ -124,7 +124,6 @@ static std::vector<QString> getWords(const dive *d)
 {
 	std::vector<QString> res;
 	tokenize(QString(d->notes), res);
-	tokenize(QString(d->diveguide), res);
 	tokenize(QString(d->buddy), res);
 	tokenize(QString(d->suit), res);
 	for (const tag_entry *tag = d->tag_list; tag; tag = tag->next)

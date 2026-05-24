@@ -26,13 +26,6 @@ private:
 	bool relevantDiveField(const DiveField &f) override;
 };
 
-class DiveGuideCompletionModel final : public CompletionModelBase {
-	Q_OBJECT
-private:
-	QStringList getStrings() override;
-	bool relevantDiveField(const DiveField &f) override;
-};
-
 class SuitCompletionModel final : public CompletionModelBase {
 	Q_OBJECT
 private:

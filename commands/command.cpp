@@ -262,11 +262,6 @@ int editBuddies(const QStringList &newList, bool currentDiveOnly)
 	return execute_edit(new EditBuddies(newList, currentDiveOnly));
 }
 
-int editDiveGuide(const QStringList &newList, bool currentDiveOnly)
-{
-	return execute_edit(new EditDiveGuide(newList, currentDiveOnly));
-}
-
 void pasteDives(const dive *d, dive_components what)
 {
 	execute(new PasteDives(d, what));

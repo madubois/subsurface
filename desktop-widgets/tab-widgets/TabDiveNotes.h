@@ -32,7 +32,6 @@ slots:
 	void updateDiveSite(struct dive *d);
 	void on_location_diveSiteSelected();
 	void on_locationPopupButton_clicked();
-	void on_diveguide_editingFinished();
 	void on_buddy_editingFinished();
 	void on_diveTripLocation_editingFinished();
 	void on_notes_editingFinished();
@@ -48,7 +47,6 @@ private:
 	bool ignoreInput; // When computionally editing fields, we have to ignore changed-signals
 	dive_trip *currentTrip;
 	BuddyCompletionModel buddyModel;
-	DiveGuideCompletionModel diveGuideModel;
 	TagCompletionModel tagModel;
 	void divesEdited(int num); // Opens a warning window if more than one dive was edited
 };

@@ -25,7 +25,6 @@ struct DiveField {
 	unsigned int water_temp : 1;
 	unsigned int atm_press : 1;
 	unsigned int divesite : 1;
-	unsigned int diveguide : 1;
 	unsigned int buddy : 1;
 	unsigned int rating : 1;
 	unsigned int visibility : 1;
@@ -49,8 +48,7 @@ struct DiveField {
 		WATER_TEMP = 1 << 5,
 		ATM_PRESS = 1 << 6,
 		DIVESITE = 1 << 7,
-		DIVEGUIDE = 1 << 8,
-		BUDDY = 1 << 9,
+			BUDDY = 1 << 9,
 		RATING = 1 << 10,
 		VISIBILITY = 1 << 11,
 		WAVESIZE = 1 << 12,
@@ -163,7 +161,6 @@ inline DiveField::DiveField(int flags) :
 	water_temp((flags & WATER_TEMP) != 0),
 	atm_press((flags & ATM_PRESS) != 0),
 	divesite((flags & DIVESITE) != 0),
-	diveguide((flags & DIVEGUIDE) != 0),
 	buddy((flags & BUDDY) != 0),
 	rating((flags & RATING) != 0),
 	visibility((flags & VISIBILITY) != 0),

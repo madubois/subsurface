@@ -56,7 +56,6 @@ static QVariant dive_table_alignment(int column)
 	case DiveTripModelBase::PHOTOS:
 	case DiveTripModelBase::COUNTRY:
 	case DiveTripModelBase::BUDDIES:
-	case DiveTripModelBase::DIVEGUIDE:
 	case DiveTripModelBase::LOCATION:
 	case DiveTripModelBase::NOTES:
 	case DiveTripModelBase::DIVEMODE:
@@ -255,8 +254,6 @@ QString DiveTripModelBase::getDescription(int column)
 		return tr("Country");
 	case BUDDIES:
 		return tr("Buddy");
-	case DIVEGUIDE:
-		return tr("Dive guide");
 	case LOCATION:
 		return tr("Location");
 	case NOTES:
@@ -292,7 +289,6 @@ QVariant DiveTripModelBase::diveData(const struct dive *d, int column, int role)
 	case MobileListModel::WaterTempRole: return get_temperature_string(d->watertemp, true);
 	case MobileListModel::SacRole: return formatSac(d);
 	case MobileListModel::SumWeightRole: return formatSumWeight(d);
-	case MobileListModel::DiveGuideRole: return QString(d->diveguide);
 	case MobileListModel::BuddyRole: return QString(d->buddy);
 	case MobileListModel::TagsRole: return QString::fromStdString(taglist_get_tagstring(d->tag_list));
 	case MobileListModel::NotesRole: return formatNotes(d);
@@ -354,8 +350,6 @@ QVariant DiveTripModelBase::diveData(const struct dive *d, int column, int role)
 			return QString(get_dive_country(d));
 		case BUDDIES:
 			return QString(d->buddy);
-		case DIVEGUIDE:
-			return QString(d->diveguide);
 		case LOCATION:
 			return QString(get_dive_location(d));
 		case GAS:
@@ -444,8 +438,6 @@ QVariant DiveTripModelBase::headerData(int section, Qt::Orientation orientation,
 			return tr("Country");
 		case BUDDIES:
 			return tr("Buddy");
-		case DIVEGUIDE:
-			return tr("Dive guide");
 		case LOCATION:
 			return tr("Location");
 		case NOTES:
@@ -1773,8 +1765,6 @@ bool DiveTripModelList::lessThan(const QModelIndex &i1, const QModelIndex &i2) c
 		return lessThanHelper(strCmp(get_dive_country(d1), get_dive_country(d2)), row_diff);
 	case BUDDIES:
 		return lessThanHelper(strCmp(d1->buddy, d2->buddy), row_diff);
-	case DIVEGUIDE:
-		return lessThanHelper(strCmp(d1->diveguide, d2->diveguide), row_diff);
 	case LOCATION:
 		return lessThanHelper(strCmp(get_dive_location(d1), get_dive_location(d2)), row_diff);
 	case NOTES:

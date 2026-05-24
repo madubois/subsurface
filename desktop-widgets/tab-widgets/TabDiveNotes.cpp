@@ -17,7 +17,6 @@
 #include <QMessageBox>
 
 struct Completers {
-	QCompleter *diveguide;
 	QCompleter *buddy;
 	QCompleter *tags;
 };
@@ -58,13 +57,10 @@ TabDiveNotes::TabDiveNotes(MainTab *parent) : TabBase(parent),
 
 	Completers completers;
 	completers.buddy = new QCompleter(&buddyModel, ui.buddy);
-	completers.diveguide = new QCompleter(&diveGuideModel, ui.diveguide);
 	completers.tags = new QCompleter(&tagModel, ui.tagWidget);
 	completers.buddy->setCaseSensitivity(Qt::CaseInsensitive);
-	completers.diveguide->setCaseSensitivity(Qt::CaseInsensitive);
 	completers.tags->setCaseSensitivity(Qt::CaseInsensitive);
 	ui.buddy->setCompleter(completers.buddy);
-	ui.diveguide->setCompleter(completers.diveguide);
 	ui.tagWidget->setCompleter(completers.tags);
 	ui.multiDiveWarningMessage->hide();
 	ui.depth->hide();
@@ -121,8 +117,6 @@ void TabDiveNotes::divesChanged(const QVector<dive *> &dives, DiveField field)
 		ui.tagWidget->setText(QString::fromStdString(taglist_get_tagstring(currentDive->tag_list)));
 	if (field.buddy)
 		ui.buddy->setText(currentDive->buddy);
-	if (field.diveguide)
-		ui.diveguide->setText(currentDive->diveguide);
 }
 
 void TabDiveNotes::diveSiteEdited(dive_site *ds, int)
@@ -203,8 +197,6 @@ void TabDiveNotes::updateData(const std::vector<dive *> &, dive *currentDive, in
 	currentTrip = single_selected_trip();
 	if (currentTrip) {
 		// only use trip relevant fields
-		ui.diveguide->setVisible(false);
-		ui.DiveguideLabel->setVisible(false);
 		ui.buddy->setVisible(false);
 		ui.BuddyLabel->setVisible(false);
 		ui.rating->setVisible(false);
@@ -237,12 +229,10 @@ void TabDiveNotes::updateData(const std::vector<dive *> &, dive *currentDive, in
 		ui.location->show();
 		ui.locationPopupButton->show();
 		ui.editDiveSiteButton->show();
-		ui.diveguide->setVisible(true);
 		ui.buddy->setVisible(true);
 		ui.rating->setVisible(true);
 		ui.RatingLabel->setVisible(true);
 		ui.BuddyLabel->setVisible(true);
-		ui.DiveguideLabel->setVisible(true);
 		ui.TagLabel->setVisible(true);
 		ui.tagWidget->setVisible(true);
 		ui.dateEdit->setReadOnly(false);
@@ -263,7 +253,6 @@ void TabDiveNotes::updateData(const std::vector<dive *> &, dive *currentDive, in
 		updateNotes(currentDive);
 		updateDiveSite(currentDive);
 		updateDateTime(currentDive);
-		ui.diveguide->setText(currentDive->diveguide);
 		ui.buddy->setText(currentDive->buddy);
 	}
 	ui.duration->setText(render_seconds_to_string(currentDive->duration.seconds));
@@ -281,7 +270,6 @@ void TabDiveNotes::clear()
 {
 	ui.rating->setCurrentStars(0);
 	ui.location->clear();
-	ui.diveguide->clear();
 	ui.buddy->clear();
 	ui.notes->clear();
 	/* set date and time to minimums which triggers showing the special value text */
@@ -310,14 +298,6 @@ void TabDiveNotes::on_buddy_editingFinished()
 		return;
 
 	divesEdited(Command::editBuddies(stringToList(ui.buddy->toPlainText()), false));
-}
-
-void TabDiveNotes::on_diveguide_editingFinished()
-{
-	if (ignoreInput || !parent.currentDive)
-		return;
-
-	divesEdited(Command::editDiveGuide(stringToList(ui.diveguide->toPlainText()), false));
 }
 
 void TabDiveNotes::on_duration_editingFinished()

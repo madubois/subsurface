@@ -277,20 +277,12 @@ public:
 	QString fieldName() const override;
 };
 
-class EditDiveGuide : public EditTagsTemplate<DiveField::DIVEGUIDE> {
-public:
-	using EditTagsTemplate::EditTagsTemplate;	// Use constructor of base class.
-	QStringList data(struct dive *d) const override;
-	void set(struct dive *d, const QStringList &v) const override;
-	QString fieldName() const override;
-};
 
 // Fields we have to remember to undo paste
 struct PasteState {
 	dive *d;
 	dive_site *divesite;
 	QString notes;
-	QString diveguide;
 	QString buddy;
 	QString suit;
 	int rating;

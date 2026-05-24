@@ -19,9 +19,6 @@ Kirigami.Page {
 	property alias buddyIndex: detailsEdit.buddyIndex
 	property alias buddyText: detailsEdit.buddyText
 	property alias buddyModel: detailsEdit.buddyModel
-	property alias diveguideIndex: detailsEdit.diveguideIndex
-	property alias diveguideText: detailsEdit.diveguideText
-	property alias diveguideModel: detailsEdit.diveguideModel
 	property alias tagText: detailsEdit.tagText
 	property alias depth: detailsEdit.depthText
 	property alias duration: detailsEdit.durationText
@@ -351,8 +348,7 @@ Kirigami.Page {
 		watertemp = modelData.waterTemp
 		suitIndex = manager.suitList.indexOf(modelData.suit)
 		buddyText = modelData.buddy;
-		diveguideText = modelData.diveGuide
-		tagText = modelData.tags
+			tagText = modelData.tags
 		notes = modelData.notes
 		if (modelData.singleWeight) {
 			// we have only one weight, go ahead, have fun and edit it

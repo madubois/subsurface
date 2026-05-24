@@ -53,16 +53,6 @@ bool BuddyCompletionModel::relevantDiveField(const DiveField &f)
 	return f.buddy;
 }
 
-QStringList DiveGuideCompletionModel::getStrings()
-{
-	return getCSVList(&dive::diveguide);
-}
-
-bool DiveGuideCompletionModel::relevantDiveField(const DiveField &f)
-{
-	return f.diveguide;
-}
-
 QStringList SuitCompletionModel::getStrings()
 {
 	QStringList list;
