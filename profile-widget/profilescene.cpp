@@ -9,6 +9,7 @@
 #include "tankitem.h"
 #include "core/device.h"
 #include "core/divecomputer.h"
+#include "core/divesite.h"
 #include "core/event.h"
 #include "core/extradata.h"
 #include "core/pref.h"
@@ -54,8 +55,10 @@ static bool extractDecoModelFromDive(const struct dive *dive, const struct divec
 	if (dive->notes) {
 		QString notes(dive->notes);
 		
-		// Try to extract Bühlmann GF values (may be in HTML, so be flexible with whitespace/tags)
-		QRegularExpression gf_pattern(R"(GFLow\s*=\s*(\d+)%?\s*(?:and|<[^>]*>)*\s*GFHigh\s*=\s*(\d+)%?)");
+		// Try to extract Bühlmann GF values - use a simple pattern that works across newlines
+		// Pattern: "GFLow = X% ... GFHigh = Y%"
+		QRegularExpression gf_pattern(R"(GFLow\s*=\s*(\d+).*?GFHigh\s*=\s*(\d+))",
+		                               QRegularExpression::DotMatchesEverythingOption);
 		QRegularExpressionMatch gf_match = gf_pattern.match(notes);
 		if (gf_match.hasMatch()) {
 			gflow = gf_match.captured(1).toInt();
@@ -148,13 +151,13 @@ ProfileScene::ProfileScene(double dpr, bool printMode, bool isGrayscale) :
 	empty(true),
 	maxtime(-1),
 	maxdepth(-1),
-	profileYAxis(new DiveCartesianAxis(DiveCartesianAxis::Position::Left, true, 3, 0, TIME_GRID, Qt::red, true, true,
+	profileYAxis(new DiveCartesianAxis(DiveCartesianAxis::Position::Left, true, 3, 0, TIME_GRID, Qt::black, true, true,
 				   dpr, 1.0, printMode, isGrayscale, *this)),
 	gasYAxis(new DiveCartesianAxis(DiveCartesianAxis::Position::Right, false, 1, 2, TIME_GRID, Qt::black, true, true,
 				       dpr, 0.7, printMode, isGrayscale, *this)),
 	temperatureAxis(new DiveCartesianAxis(DiveCartesianAxis::Position::Right, false, 3, 0, TIME_GRID, Qt::black, false, false,
 					    dpr, 1.0, printMode, isGrayscale, *this)),
-	timeAxis(new DiveCartesianAxis(DiveCartesianAxis::Position::Bottom, false, 2, 2, TIME_GRID, Qt::blue, true, true,
+	timeAxis(new DiveCartesianAxis(DiveCartesianAxis::Position::Bottom, false, 2, 2, TIME_GRID, Qt::black, true, true,
 			      dpr, 1.0, printMode, isGrayscale, *this)),
 	cylinderPressureAxis(new DiveCartesianAxis(DiveCartesianAxis::Position::Right, false, 4, 0, TIME_GRID, Qt::black, false, false,
 						   dpr, 1.0, printMode, isGrayscale, *this)),
@@ -312,7 +315,7 @@ void ProfileScene::updateVisibility(bool diveHasHeartBeat, bool simplified)
 
 		percentageItem->setVisible(prefs.percentagegraph);
 
-		meanDepthItem->setVisible(prefs.show_average_depth);
+		meanDepthItem->setVisible(false);
 		tankItem->setVisible(prefs.tankbar);
 		temperatureItem->setVisible(true);
 	}
@@ -464,6 +467,7 @@ void ProfileScene::plotDive(const struct dive *dIn, int dcIn, DivePlannerPointsM
 {
 	d = dIn;
 	dc = dcIn;
+			animation.reset();
 	animatedAxes.clear();
 	if (!d) {
 		clear();
@@ -476,24 +480,9 @@ void ProfileScene::plotDive(const struct dive *dIn, int dcIn, DivePlannerPointsM
 		return;
 	}
 
-	if (!plannerModel) {
-		int gflow = prefs.gflow, gfhigh = prefs.gfhigh, vpmb_conservatism = prefs.vpmb_conservatism;
-		// Try to extract the deco model info from dive extra_data or notes (if available)
-		if (!extractDecoModelFromDive(d, currentdc, gflow, gfhigh, vpmb_conservatism)) {
-			// Fallback to current preferences if not found in dive
-		}
-
-		if (decoMode(false) == VPMB)
-			decoModelParameters->set(QString("Subsurface VPM-B +%1").arg(vpmb_conservatism), getColor(PRESSURE_TEXT));
-		else
-			decoModelParameters->set(QString("Subsurface GF %1/%2").arg(gflow).arg(gfhigh), getColor(PRESSURE_TEXT));
-	} else {
-		struct diveplan &diveplan = plannerModel->getDiveplan();
-		if (decoMode(inPlanner) == VPMB)
-			decoModelParameters->set(QString("VPM-B +%1").arg(diveplan.vpmb_conservatism), getColor(PRESSURE_TEXT));
-		else
-			decoModelParameters->set(QString("GF %1/%2").arg(diveplan.gflow).arg(diveplan.gfhigh), getColor(PRESSURE_TEXT));
-	}
+	decoModelParameters->setBold(true);
+	QString location = d->dive_site && d->dive_site->name ? QString::fromUtf8(d->dive_site->name) : tr("Unknown location");
+	decoModelParameters->set(location, Qt::black);
 
 	// If we come from the empty state, the plot info has to be recalculated.
 	if (empty)
@@ -513,8 +502,29 @@ void ProfileScene::plotDive(const struct dive *dIn, int dcIn, DivePlannerPointsM
 	 * shown.
 	 * create_plot_info_new() automatically frees old plot data.
 	 */
-	if (!keepPlotInfo)
+	if (!keepPlotInfo) {
+		// Save original GF settings
+		int orig_gflow = prefs.gflow, orig_gfhigh = prefs.gfhigh;
+		int orig_vpmb = prefs.vpmb_conservatism;
+		
+		// Get the dive's GF values to use for profile calculation
+		if (!plannerModel) {
+			int deco_gflow = prefs.gflow, deco_gfhigh = prefs.gfhigh, deco_vpmb = prefs.vpmb_conservatism;
+			extractDecoModelFromDive(d, currentdc, deco_gflow, deco_gfhigh, deco_vpmb);
+			
+			// Temporarily set prefs to dive's GF for accurate profile calculation
+			prefs.gflow = deco_gflow;
+			prefs.gfhigh = deco_gfhigh;
+			prefs.vpmb_conservatism = deco_vpmb;
+		}
+		
 		create_plot_info_new(d, currentdc, &plotInfo, planner_ds);
+		
+		// Restore original GF settings
+		prefs.gflow = orig_gflow;
+		prefs.gfhigh = orig_gfhigh;
+		prefs.vpmb_conservatism = orig_vpmb;
+	}
 
 	bool hasHeartBeat = plotInfo.maxhr;
 	// For mobile we might want to turn of some features that are normally shown.
@@ -649,7 +659,7 @@ void ProfileScene::plotDive(const struct dive *dIn, int dcIn, DivePlannerPointsM
 	int nr = number_of_computers(d);
 	if (nr > 1)
 		dcText += tr(" (#%1 of %2)").arg(dc + 1).arg(nr);
-	diveComputerText->set(dcText, getColor(TIME_TEXT, isGrayscale));
+	diveComputerText->set(dcText, Qt::black);
 
 	// Reset animation.
 	if (animSpeed <= 0)
@@ -673,7 +683,7 @@ void ProfileScene::draw(QPainter *painter, const QRect &pos,
 	plotDive(d, dc, plannerModel, inPlanner, true, false, true);
 
 	QImage image(pos.size(), QImage::Format_ARGB32);
-	image.fill(getColor(::BACKGROUND, isGrayscale));
+	image.fill(Qt::white);
 
 	QPainter imgPainter(&image);
 	imgPainter.setRenderHint(QPainter::Antialiasing);

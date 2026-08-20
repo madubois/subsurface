@@ -115,17 +115,12 @@ void DiveProfileItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
 	setPen(Qt::NoPen);
 	QGraphicsPolygonItem::paint(painter, option, widget);
 
-	// Here we actually paint the boundaries of the Polygon using the colors that the model provides.
-	// Those are the speed colors of the dives.
 	QPen pen;
+	pen.setColor(Qt::black);
 	pen.setCosmetic(true);
 	pen.setWidth(2);
 	QPolygonF poly = polygon();
-	const struct plot_data *data = pInfo.entry;
-	// This paints the colors of the velocities.
 	for (int i = from + 1; i < to; i++) {
-		QColor color = getColor((color_index_t)(VELOCITY_COLORS_START_IDX + data[i].velocity));
-		pen.setBrush(QBrush(color));
 		painter->setPen(pen);
 		if (i - from < poly.count() - 1)
 			painter->drawLine(poly[i - from], poly[i - from + 1]);
@@ -755,14 +750,8 @@ void DiveReportedCeiling::replot(const dive *, int fromIn, int toIn, bool)
 	}
 	setPolygon(p);
 	QLinearGradient pat(0, p.boundingRect().top(), 0, p.boundingRect().bottom());
-	// does the user want the ceiling in "surface color" or in red?
-	if (prefs.redceiling) {
-		pat.setColorAt(0, getColor(CEILING_SHALLOW));
-		pat.setColorAt(1, getColor(CEILING_DEEP));
-	} else {
-		pat.setColorAt(0, getColor(BACKGROUND_TRANS));
-		pat.setColorAt(1, getColor(BACKGROUND_TRANS));
-	}
+	pat.setColorAt(0, getColor(CEILING_SHALLOW));
+	pat.setColorAt(1, getColor(CEILING_DEEP));
 	setPen(QPen(QBrush(Qt::NoBrush), 0));
 	setBrush(pat);
 }

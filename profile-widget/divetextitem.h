@@ -19,6 +19,7 @@ public:
 	// placing text items next to each other. This may have to be fixed.
 	DiveTextItem(double dpr, double scale, int alignFlags, QGraphicsItem *parent);
 	void set(const QString &text, const QBrush &brush);
+	void setBold(bool bold);
 	const QString &text();
 	static double fontHeight(double dpr, double scale);
 	static std::pair<double, double> getLabelSize(double dpr, double scale, const QString &label);
@@ -29,6 +30,7 @@ private:
 	QString internalText;
 	double dpr;
 	double scale;
+	bool bold;
 };
 
 #endif // DIVETEXTITEM_H

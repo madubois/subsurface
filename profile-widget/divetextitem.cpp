@@ -12,7 +12,8 @@ static const double outlineSize = 3.0;
 DiveTextItem::DiveTextItem(double dpr, double scale, int alignFlags, QGraphicsItem *parent) : QGraphicsPixmapItem(parent),
 	internalAlignFlags(alignFlags),
 	dpr(dpr),
-	scale(scale)
+	scale(scale),
+	bold(false)
 {
 	setFlag(ItemIgnoresTransformations);
 }
@@ -42,6 +43,7 @@ void DiveTextItem::set(const QString &t, const QBrush &b)
 	}
 
 	QFont fnt = getFont(dpr, scale);
+	fnt.setBold(bold);
 
 	QPainterPath textPath;
 	textPath.addText(0.0, 0.0, fnt, internalText);
@@ -75,6 +77,11 @@ void DiveTextItem::set(const QString &t, const QBrush &b)
 		(internalAlignFlags & Qt::AlignHCenter) ? -outlineRect.width() / 2.0 :
 		/* (internalAlignFlags & Qt::AlignRight) */ 0.0;
 	setOffset(xOffset, yOffset);
+}
+
+void DiveTextItem::setBold(bool value)
+{
+	bold = value;
 }
 
 const QString &DiveTextItem::text()

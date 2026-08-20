@@ -429,7 +429,7 @@ void ProfileWidget2::setProfileState()
 	disconnectPlannerModel();
 
 	currentState = PROFILE;
-	setBackgroundBrush(getColor(::BACKGROUND, profileScene->isGrayscale));
+	setBackgroundBrush(Qt::white);
 
 #ifndef SUBSURFACE_MOBILE
 	toolTipItem->readPos();

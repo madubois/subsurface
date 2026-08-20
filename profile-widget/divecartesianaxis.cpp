@@ -42,6 +42,7 @@ DiveCartesianAxis::DiveCartesianAxis(Position position, bool inverted, int integ
 	 * printing on OSX and Linux */
 	pen.setWidth(DiveCartesianAxis::printMode ? 0 : 2);
 	pen.setCosmetic(true);
+	pen.setStyle(Qt::NoPen);
 	setPen(pen);
 
 	pen.setBrush(getColor(gridColor, isGrayscale));
