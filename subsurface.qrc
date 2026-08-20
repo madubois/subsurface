@@ -3,7 +3,7 @@
         <file alias="satellite-icon">icons/satellite.svg</file>
         <file alias="graph-icon">icons/pref_tech.png</file>
         <file alias="star-icon">icons/star.svg</file>
-        <file alias="subsurface-icon">icons/subsurface-icon.svg</file>
+        <file alias="subsurface-icon">icons/diver-flag-logo-black-and-white.png</file>
         <file alias="subsurface-mobile-icon">icons/subsurface-mobile-icon.png</file>
         <file alias="list-add-icon">icons/plus.png</file>
         <file alias="list-remove-icon">icons/trash.png</file>

@@ -155,7 +155,7 @@ void MainTab::changeEvent(QEvent *ev)
 // setup the colors of 'header' elements in the tab widget
 void MainTab::colorsChanged()
 {
-	QString colorText = isDark ? QStringLiteral("lightblue") : QStringLiteral("mediumblue");
+	QString colorText = isDark ? QStringLiteral("lightblue") : QStringLiteral("darkblue");
 	QString lastpart = colorText + " ;}";
 
 	// only set the color if the widget is enabled

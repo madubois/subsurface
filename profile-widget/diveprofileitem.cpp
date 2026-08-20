@@ -140,7 +140,7 @@ void DiveProfileItem::replot(const dive *d, int from, int to, bool in_planner)
 		return;
 
 	profileColor = pInfo.waypoint_above_ceiling ? QColor(Qt::red)
-						    : getColor(DEPTH_BOTTOM);
+						    : getColor(DEPTH_BOTTOM).darker(150);
 
 	/* Show any ceiling we may have encountered */
 	if (prefs.dcceiling && !prefs.redceiling) {
@@ -157,11 +157,9 @@ void DiveProfileItem::replot(const dive *d, int from, int to, bool in_planner)
 		setPolygon(p);
 	}
 
-	// This is the blueish gradient that the Depth Profile should have.
-	// It's a simple QLinearGradient with 2 stops, starting from top to bottom.
 	QLinearGradient pat(0, polygon().boundingRect().top(), 0, polygon().boundingRect().bottom());
 	pat.setColorAt(1, profileColor);
-	pat.setColorAt(0, getColor(DEPTH_TOP));
+	pat.setColorAt(0, profileColor);
 	setBrush(QBrush(pat));
 
 	// No point in searching peaks with less than three samples
@@ -749,11 +747,8 @@ void DiveReportedCeiling::replot(const dive *, int fromIn, int toIn, bool)
 			p.append(QPointF(hAxis.posAtValue(sec), vAxis.posAtValue(0)));
 	}
 	setPolygon(p);
-	QLinearGradient pat(0, p.boundingRect().top(), 0, p.boundingRect().bottom());
-	pat.setColorAt(0, getColor(CEILING_SHALLOW));
-	pat.setColorAt(1, getColor(CEILING_DEEP));
 	setPen(QPen(QBrush(Qt::NoBrush), 0));
-	setBrush(pat);
+	setBrush(QBrush(QColor(Qt::red).darker(120)));
 }
 
 void DiveReportedCeiling::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)

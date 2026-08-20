@@ -36,16 +36,17 @@ DiveCartesianAxis::DiveCartesianAxis(Position position, bool inverted, int integ
 	transform({1.0, 0.0})
 {
 	QPen pen;
-	pen.setColor(getColor(TIME_GRID, isGrayscale));
+	pen.setColor(Qt::black);
 	/* cosmetic width() == 0 for lines in printMode
 	 * having setCosmetic(true) and width() > 0 does not work when
 	 * printing on OSX and Linux */
 	pen.setWidth(DiveCartesianAxis::printMode ? 0 : 2);
 	pen.setCosmetic(true);
-	pen.setStyle(Qt::NoPen);
 	setPen(pen);
 
-	pen.setBrush(getColor(gridColor, isGrayscale));
+	pen.setColor(getColor(gridColor, isGrayscale));
+	pen.setWidth(1);
+	pen.setStyle(Qt::NoPen);
 	gridPen = pen;
 
 	/* Create the longest expected label, e.g. 999.99. */
@@ -390,7 +391,7 @@ void DiveCartesianAxis::setPosition(const QRectF &rectIn)
 			setLine(QLineF(rect.topLeft(), rect.bottomLeft()));
 			break;
 		case Position::Right:
-			setLine(QLineF(rect.topRight(), rect.bottomRight()));
+				setLine(QLineF(rect.topLeft(), rect.bottomLeft()));
 			break;
 		case Position::Bottom:
 		default:
