@@ -15,41 +15,19 @@
 #include <QStackedWidget>
 #include <QLabel>
 
-// A resizing display of the Subsurface logo when no dive is shown
+// The empty profile area shown when no dive is loaded.
 class EmptyView : public QLabel {
 public:
 	EmptyView(QWidget *parent = nullptr);
-	~EmptyView();
-private:
-	QPixmap logo;
-	void update();
-	void resizeEvent(QResizeEvent *) override;
 };
 
-EmptyView::EmptyView(QWidget *parent) : QLabel(parent),
-	logo(":poster-icon")
+EmptyView::EmptyView(QWidget *parent) : QLabel(parent)
 {
 	QPalette pal;
 	pal.setColor(QPalette::Window, getColor(::BACKGROUND));
 	setAutoFillBackground(true);
 	setPalette(pal);
 	setMinimumSize(1,1);
-	setAlignment(Qt::AlignHCenter);
-	update();
-}
-
-EmptyView::~EmptyView()
-{
-}
-
-void EmptyView::update()
-{
-	setPixmap(logo.scaled(size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
-}
-
-void EmptyView::resizeEvent(QResizeEvent *)
-{
-	update();
 }
 
 ProfileWidget::ProfileWidget() : d(nullptr), dc(0), placingCommand(false)
