@@ -29,6 +29,7 @@ public:
 public slots:
 	void centerOnDiveSite(struct dive_site *);
 	void centerOnIndex(const QModelIndex& idx);
+	void setCurrentDive(struct dive *dive);
 	QString importSiteImage(const QString &path);
 	void selectedDivesChanged(const QList<int> &);
 	void coordinatesChanged(struct dive_site *ds, const location_t &);

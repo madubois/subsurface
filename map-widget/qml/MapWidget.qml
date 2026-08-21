@@ -368,6 +368,103 @@ Item {
 		anchors.fill: parent
 		visible: rootItem.siteImageVisible
 		clip: true
+		property string overlayMode: "none"
+		property var overlayItems: []
+		property var activeLine: null
+		property int activeNoteIndex: -1
+		property int selectedNoteIndex: -1
+		property int imageTransformRevision: 0
+
+		function imagePoint(x, y) {
+			var point = siteImageContent.mapFromItem(siteImage, x, y)
+			return { x: Math.max(0, Math.min(1, point.x / siteImageContent.width)),
+				y: Math.max(0, Math.min(1, point.y / siteImageContent.height)) }
+		}
+
+		function saveOverlay() {
+			mapHelper.saveDiveImageOverlay(JSON.stringify(overlayItems))
+			overlayCanvas.requestPaint()
+		}
+
+		function noteAt(point) {
+			for (var i = overlayItems.length - 1; i >= 0; --i) {
+				var item = overlayItems[i]
+				if (item.type !== "note")
+					continue
+				var dx = item.x - point.x
+				var dy = item.y - point.y
+				if (Math.sqrt(dx * dx + dy * dy) < 0.12)
+					return i
+			}
+			return -1
+		}
+
+		function wrappedLines(text, context, maxWidth) {
+			var result = []
+			var paragraphs = text.split("\n")
+			for (var p = 0; p < paragraphs.length; ++p) {
+				var words = paragraphs[p].split(" ")
+				var current = ""
+				for (var w = 0; w < words.length; ++w) {
+					var candidate = current.length ? current + " " + words[w] : words[w]
+					if (current.length && context.measureText(candidate).width > maxWidth) {
+						result.push(current)
+						current = words[w]
+					} else {
+						current = candidate
+					}
+				}
+				result.push(current)
+			}
+			return result.length ? result : [""]
+		}
+
+		function fittedNote(item, context, maxWidth, maxHeight) {
+			var size = item.size || 20
+			var lines = []
+			var lineHeight = size * siteImageContent.scale
+			for (var attempt = 0; attempt < 8; ++attempt) {
+				context.font = "bold " + (size * siteImageContent.scale) + "px sans-serif"
+				lines = siteImage.wrappedLines(item.text, context, maxWidth - 16)
+				lineHeight = size * siteImageContent.scale
+				var requiredHeight = lines.length * lineHeight
+				var requiredWidth = 0
+				for (var line = 0; line < lines.length; ++line)
+					requiredWidth = Math.max(requiredWidth, context.measureText(lines[line]).width)
+				if (requiredHeight <= maxHeight - 2 && requiredWidth <= maxWidth - 2 || size <= 2)
+					break
+				var heightScale = (maxHeight - 2) / requiredHeight
+				var widthScale = (maxWidth - 2) / requiredWidth
+				size = Math.max(2, size * Math.min(heightScale, widthScale))
+			}
+			return { size: size, lines: lines, lineHeight: lineHeight }
+		}
+
+		function requiredBoxHeight(item, size) {
+			var context = overlayCanvas.getContext("2d")
+			context.font = "bold " + (size * siteImageContent.scale) + "px sans-serif"
+			var maxWidth = (item.boxWidth || 0.35) * siteImageContent.width * siteImageContent.scale
+			var lines = wrappedLines(item.text, context, maxWidth - 16)
+			return (lines.length * size * siteImageContent.scale + 2) /
+				(siteImageContent.height * siteImageContent.scale)
+		}
+
+		function restoreOverlay() {
+			overlayItems = []
+			try {
+				overlayItems = JSON.parse(mapHelper.diveImageOverlayData)
+				for (var i = 0; i < overlayItems.length; ++i) {
+					var item = overlayItems[i]
+					if (item.type === "note" && item.autoHeight !== false) {
+						item.boxHeight = requiredBoxHeight(item, item.size || 20)
+						item.autoHeight = true
+					}
+				}
+			} catch (error) {
+				overlayItems = []
+			}
+			overlayCanvas.requestPaint()
+		}
 
 		Image {
 			id: siteImageContent
@@ -378,6 +475,167 @@ Item {
 			source: mapHelper.siteImageUrl
 			fillMode: Image.PreserveAspectFit
 			scale: 1.0
+		}
+
+		Canvas {
+			id: overlayCanvas
+			anchors.fill: siteImage
+			z: 2
+			onPaint: {
+				var context = getContext("2d")
+				context.clearRect(0, 0, width, height)
+				context.lineWidth = 4
+				context.strokeStyle = "#e53935"
+				context.fillStyle = "#e53935"
+				context.textBaseline = "middle"
+				context.textAlign = "center"
+				context.font = "bold 20px sans-serif"
+				for (var i = 0; i < siteImage.overlayItems.length; ++i) {
+					var item = siteImage.overlayItems[i]
+					if (item.type === "line") {
+						var start = siteImageContent.mapToItem(siteImage,
+							item.x1 * siteImageContent.width, item.y1 * siteImageContent.height)
+						var end = siteImageContent.mapToItem(siteImage,
+							item.x2 * siteImageContent.width, item.y2 * siteImageContent.height)
+						context.beginPath()
+						context.moveTo(start.x, start.y)
+						context.lineTo(end.x, end.y)
+						context.stroke()
+					} else if (item.type === "note") {
+						var handle = noteHandles.itemAt(i)
+						var liveSize = handle && handle.visible ? handle.previewSize : (item.size || 20)
+						var notePoint = siteImageContent.mapToItem(siteImage,
+							item.x * siteImageContent.width, item.y * siteImageContent.height)
+						var liveWidth = handle && handle.visible ? handle.previewWidth : (item.boxWidth || 0.35)
+						var liveHeight = handle && handle.visible ? handle.previewHeight : (item.boxHeight || 0.2)
+						var renderItem = { text: item.text, size: liveSize }
+						var boxWidth = liveWidth * siteImageContent.width * siteImageContent.scale
+						var boxHeight = liveHeight * siteImageContent.height * siteImageContent.scale
+						var fitted = siteImage.fittedNote(renderItem, context, boxWidth, boxHeight)
+						var lines = fitted.lines
+						var lineHeight = fitted.lineHeight
+						context.save()
+						context.beginPath()
+						context.rect(notePoint.x - boxWidth * 0.5, notePoint.y - boxHeight * 0.5, boxWidth, boxHeight)
+						context.clip()
+						for (var line = 0; line < lines.length; ++line)
+							context.fillText(lines[line], notePoint.x,
+								notePoint.y + (line - (lines.length - 1) * 0.5) * lineHeight)
+						context.restore()
+					}
+				}
+			}
+		}
+
+		Repeater {
+			id: noteHandles
+			model: siteImage.overlayItems
+			delegate: Item {
+				id: noteItem
+				property bool isNote: modelData.type === "note"
+				property real previewSize: modelData.size || 20
+				property int lineCount: modelData.text.split("\n").length
+				property real previewWidth: modelData.boxWidth || 0.35
+				property real previewHeight: modelData.boxHeight || 0.2
+				property real resizeStartWidth: previewWidth
+				property real resizeStartHeight: previewHeight
+				property real resizeStartMouseY: 0
+				property real resizeStartSize: 20
+				property real resizeStartMouseX: 0
+				property var notePosition: {
+					var revision = siteImage.imageTransformRevision
+					return siteImageContent.mapToItem(siteImage,
+						modelData.x * siteImageContent.width, modelData.y * siteImageContent.height)
+				}
+				visible: isNote && siteImage.overlayMode === "move"
+				enabled: visible
+				width: previewWidth * siteImageContent.width * siteImageContent.scale
+				height: previewHeight * siteImageContent.height * siteImageContent.scale
+				x: notePosition.x - width * 0.5
+				y: notePosition.y - height * 0.5
+				z: 3
+
+				Text {
+					id: noteText
+					anchors.centerIn: parent
+					text: modelData.text
+					color: "transparent"
+					font.bold: true
+					font.pixelSize: noteItem.previewSize * siteImageContent.scale
+				}
+
+				Rectangle {
+					anchors.fill: parent
+					color: "transparent"
+					border.color: "#e53935"
+					border.width: 2
+				}
+
+				MouseArea {
+					anchors.fill: parent
+					drag.target: noteItem
+					preventStealing: true
+					cursorShape: Qt.OpenHandCursor
+					onClicked: siteImage.selectedNoteIndex = index
+					onReleased: {
+					var point = siteImageContent.mapFromItem(siteImage,
+						noteItem.x + noteItem.width * 0.5, noteItem.y + noteItem.height * 0.5)
+					var updated = siteImage.overlayItems.slice(0)
+					updated[index] = { type: "note", text: modelData.text, size: modelData.size || 20,
+						boxWidth: noteItem.previewWidth, boxHeight: noteItem.previewHeight, autoHeight: false,
+						x: Math.max(0, Math.min(1, point.x / siteImageContent.width)),
+						y: Math.max(0, Math.min(1, point.y / siteImageContent.height)) }
+					siteImage.overlayItems = updated
+					siteImage.saveOverlay()
+					}
+				}
+
+				Rectangle {
+					width: 12
+					height: 12
+					x: parent.width - width
+					y: parent.height - height
+					color: "#e53935"
+					border.color: "white"
+					MouseArea {
+						anchors.fill: parent
+						cursorShape: Qt.SizeFDiagCursor
+						onPressed: {
+							noteItem.resizeStartMouseX = mouseX
+							noteItem.resizeStartMouseY = mouseY
+							noteItem.resizeStartWidth = noteItem.previewWidth
+							noteItem.resizeStartHeight = noteItem.previewHeight
+						}
+						onPositionChanged: {
+							if (pressed) {
+								noteItem.previewWidth = Math.max(0.01, noteItem.resizeStartWidth + (mouseX - noteItem.resizeStartMouseX) / (siteImageContent.width * siteImageContent.scale))
+								noteItem.previewHeight = Math.max(0.01, noteItem.resizeStartHeight + (mouseY - noteItem.resizeStartMouseY) / (siteImageContent.height * siteImageContent.scale))
+								overlayCanvas.requestPaint()
+							}
+						}
+						onReleased: {
+							var updated = siteImage.overlayItems.slice(0)
+							var note = updated[index]
+							updated[index] = { type: "note", text: note.text,
+								size: Math.max(2, noteItem.previewSize),
+								boxWidth: noteItem.previewWidth, boxHeight: noteItem.previewHeight, autoHeight: false,
+								x: note.x, y: note.y }
+							siteImage.overlayItems = updated
+							siteImage.selectedNoteIndex = index
+							siteImage.saveOverlay()
+						}
+					}
+				}
+			}
+		}
+
+		Connections {
+			target: siteImageContent
+			onXChanged: { siteImage.imageTransformRevision++; overlayCanvas.requestPaint() }
+			onYChanged: { siteImage.imageTransformRevision++; overlayCanvas.requestPaint() }
+			onScaleChanged: { siteImage.imageTransformRevision++; overlayCanvas.requestPaint() }
+			onWidthChanged: { siteImage.imageTransformRevision++; overlayCanvas.requestPaint() }
+			onHeightChanged: { siteImage.imageTransformRevision++; overlayCanvas.requestPaint() }
 		}
 
 		property bool restoringViewState: false
@@ -404,8 +662,52 @@ Item {
 
 		MouseArea {
 			anchors.fill: parent
-			drag.target: siteImageContent
+			drag.target: siteImage.overlayMode === "none" ? siteImageContent : undefined
+			onPressed: {
+				if (siteImage.overlayMode === "move")
+					siteImage.activeNoteIndex = siteImage.noteAt(siteImage.imagePoint(mouseX, mouseY))
+					siteImage.selectedNoteIndex = siteImage.activeNoteIndex
+			}
+			onClicked: {
+				if (siteImage.overlayMode === "line") {
+					var point = siteImage.imagePoint(mouseX, mouseY)
+					if (!siteImage.activeLine) {
+						siteImage.activeLine = point
+					} else {
+						siteImage.overlayItems.push({ type: "line",
+							x1: siteImage.activeLine.x, y1: siteImage.activeLine.y,
+							x2: point.x, y2: point.y })
+						siteImage.activeLine = null
+						siteImage.saveOverlay()
+					}
+					overlayCanvas.requestPaint()
+				}
+			}
+			onPositionChanged: {
+				if (siteImage.overlayMode === "move" && siteImage.activeNoteIndex >= 0 && pressed) {
+					var point = siteImage.imagePoint(mouseX, mouseY)
+					var updated = siteImage.overlayItems.slice(0)
+					var note = updated[siteImage.activeNoteIndex]
+					updated[siteImage.activeNoteIndex] = { type: "note", text: note.text, size: note.size || 20,
+						x: point.x, y: point.y }
+					siteImage.overlayItems = updated
+					overlayCanvas.requestPaint()
+				}
+			}
+			onReleased: {
+				if (siteImage.overlayMode === "move") {
+					if (siteImage.activeNoteIndex >= 0)
+						siteImage.saveOverlay()
+					siteImage.activeNoteIndex = -1
+				}
+				if (siteImage.overlayMode === "none")
+					siteImage.saveViewState()
+			}
 			onWheel: {
+				if (siteImage.overlayMode !== "none") {
+					wheel.accepted = true
+					return
+				}
 				var factor = wheel.angleDelta.y > 0 ? 1.2 : 1.0 / 1.2
 				var nextScale = siteImageContent.scale * factor
 				siteImageContent.scale = Math.max(1.0, Math.min(nextScale, 8.0))
@@ -413,18 +715,48 @@ Item {
 				wheel.accepted = true
 			}
 			onDoubleClicked: {
+				if (siteImage.overlayMode !== "none")
+					return
 				siteImageContent.scale = siteImageContent.scale > 1.0 ? 1.0 : 2.0
 				siteImageContent.x = (siteImage.width - siteImageContent.width) * 0.5
 				siteImageContent.y = (siteImage.height - siteImageContent.height) * 0.5
 				siteImage.saveViewState()
 			}
-			onReleased: siteImage.saveViewState()
 		}
 
 		Connections {
 			target: mapHelper
 			onSiteImagePathChanged: {
+				siteImage.restoreOverlay()
 				siteImage.restoreViewState()
+			}
+				onDiveImageOverlayChanged: siteImage.restoreOverlay()
+				onCurrentDiveChanged: siteImage.restoreOverlay()
+		}
+
+		Component.onCompleted: restoreOverlay()
+
+		Rectangle {
+			id: overlayToolbar
+			anchors.left: parent.left
+			anchors.top: parent.top
+			anchors.margins: 10
+			width: overlayTools.width + 20
+			height: 62
+			color: "#cc202020"
+			visible: rootItem.siteImageVisible
+
+			Row {
+				id: overlayTools
+				anchors.centerIn: parent
+				spacing: 6
+				Rectangle { width: 58; height: 26; color: siteImage.overlayMode === "line" ? "#e53935" : "#555555"; Text { anchors.centerIn: parent; color: "white"; text: qsTr("Line") } MouseArea { anchors.fill: parent; onClicked: siteImage.overlayMode = siteImage.overlayMode === "line" ? "none" : "line" } }
+				Rectangle { width: 58; height: 26; color: siteImage.overlayMode === "move" ? "#e53935" : "#555555"; Text { anchors.centerIn: parent; color: "white"; text: qsTr("Move") } MouseArea { anchors.fill: parent; onClicked: siteImage.overlayMode = siteImage.overlayMode === "move" ? "none" : "move" } }
+				TextEdit { id: noteInput; width: 130; height: 50; color: "white"; font.pixelSize: 14; clip: true; selectByMouse: true; wrapMode: TextEdit.Wrap; text: qsTr("Note") }
+				Rectangle { width: 58; height: 26; color: "#555555"; Text { anchors.centerIn: parent; color: "white"; text: qsTr("Add") } MouseArea { anchors.fill: parent; onClicked: { if (noteInput.text.length > 0) { var newSize = parseInt(noteSizeInput.text) || 20; var newNote = { type: "note", text: noteInput.text, size: newSize, boxWidth: 0.35, boxHeight: 0.2, autoHeight: true, x: 0.1, y: 0.15 }; newNote.boxHeight = siteImage.requiredBoxHeight(newNote, newSize); siteImage.overlayItems.push(newNote); siteImage.saveOverlay(); noteInput.text = "" } } } }
+				TextInput { id: noteSizeInput; width: 45; height: 26; color: "white"; font.pixelSize: 14; verticalAlignment: TextInput.AlignVCenter; inputMethodHints: Qt.ImhDigitsOnly; text: "20" }
+				Rectangle { width: 58; height: 26; color: "#555555"; Text { anchors.centerIn: parent; color: "white"; text: qsTr("Size") } MouseArea { anchors.fill: parent; onClicked: { var size = parseInt(noteSizeInput.text); if (siteImage.selectedNoteIndex >= 0 && !isNaN(size)) { size = Math.max(2, Math.min(96, size)); var updated = siteImage.overlayItems.slice(0); var note = updated[siteImage.selectedNoteIndex]; updated[siteImage.selectedNoteIndex] = { type: "note", text: note.text, size: size, boxWidth: note.boxWidth || 0.35, boxHeight: Math.max(note.boxHeight || 0.2, siteImage.requiredBoxHeight(note, size)), x: note.x, y: note.y }; siteImage.overlayItems = updated; siteImage.saveOverlay(); } } } }
+				Rectangle { width: 58; height: 26; color: "#555555"; Text { anchors.centerIn: parent; color: "white"; text: qsTr("Clear") } MouseArea { anchors.fill: parent; onClicked: { siteImage.overlayItems = []; siteImage.saveOverlay() } } }
 			}
 		}
 
@@ -437,7 +769,7 @@ Item {
 			height: clearImageButton.height + 20
 			color: "#b08000"
 			radius: 5
-			visible: mapHelper.editMode && rootItem.siteImageVisible
+			visible: rootItem.siteImageVisible
 
 			MouseArea {
 				id: clearImageButton

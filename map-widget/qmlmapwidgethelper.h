@@ -27,6 +27,8 @@ class MapWidgetHelper : public QObject {
 	Q_PROPERTY(QString pluginObject READ pluginObject NOTIFY pluginObjectChanged)
 	Q_PROPERTY(QString siteImagePath READ siteImagePath NOTIFY siteImagePathChanged)
 	Q_PROPERTY(QUrl siteImageUrl READ siteImageUrl NOTIFY siteImagePathChanged)
+	Q_PROPERTY(QString currentDiveKey READ currentDiveKey NOTIFY currentDiveChanged)
+	Q_PROPERTY(QString diveImageOverlayData READ diveImageOverlay NOTIFY diveImageOverlayChanged)
 
 public:
 	explicit MapWidgetHelper(QObject *parent = NULL);
@@ -45,10 +47,14 @@ public:
 	Q_INVOKABLE void clearSiteImage();
 	Q_INVOKABLE QVariantMap siteImageViewState() const;
 	Q_INVOKABLE void saveSiteImageViewState(qreal scale, qreal x, qreal y);
+	Q_INVOKABLE QString diveImageOverlay() const;
+	Q_INVOKABLE void saveDiveImageOverlay(const QString &overlay);
+	void setCurrentDive(struct dive *dive);
 	void setSelected(const QVector<dive_site *> &divesites);
 	QString pluginObject();
 	QString siteImagePath() const;
 	QUrl siteImageUrl() const;
+	QString currentDiveKey() const;
 	bool editMode() const;
 
 private:
@@ -59,11 +65,13 @@ private:
 	qreal m_smallCircleRadius;
 	bool m_editMode;
 	struct dive_site *m_currentDs;
+	QString m_currentDiveKey;
 	mutable QString m_renderedPdfSource;
 	mutable QString m_renderedPdfPath;
 
 private slots:
 	void diveSiteChanged(struct dive_site *ds, int field);
+	void divesSelected(const QVector<dive *> &dives, dive *currentDive, int currentDC);
 
 signals:
 	void modelChanged();
@@ -72,6 +80,8 @@ signals:
 	void coordinatesChanged(struct dive_site *ds, const location_t &);
 	void pluginObjectChanged();
 	void siteImagePathChanged();
+	void currentDiveChanged();
+	void diveImageOverlayChanged();
 };
 
 

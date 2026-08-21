@@ -10,6 +10,10 @@
 #include <QVector>
 #include <QUrl>
 #include <QSettings>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include "core/divelog.h"
+#include "core/selection.h"
 
 #include "qmlmapwidgethelper.h"
 #include "core/divesite.h"
@@ -33,6 +37,7 @@ MapWidgetHelper::MapWidgetHelper(QObject *parent) : QObject(parent)
 	m_editMode = false;
 	m_currentDs = nullptr;
 	connect(&diveListNotifier, &DiveListNotifier::diveSiteChanged, this, &MapWidgetHelper::diveSiteChanged);
+	connect(&diveListNotifier, &DiveListNotifier::divesSelected, this, &MapWidgetHelper::divesSelected);
 }
 
 QGeoCoordinate MapWidgetHelper::getCoordinates(struct dive_site *ds)
@@ -44,6 +49,14 @@ QGeoCoordinate MapWidgetHelper::getCoordinates(struct dive_site *ds)
 
 void MapWidgetHelper::centerOnDiveSite(struct dive_site *ds)
 {
+	updateEditMode();
+	QString diveKey = current_dive ? QStringLiteral("%1-%2")
+		.arg(current_dive->number).arg(current_dive->when) : QString();
+	if (m_currentDiveKey != diveKey) {
+		m_currentDiveKey = diveKey;
+		emit currentDiveChanged();
+		emit diveImageOverlayChanged();
+	}
 	if (m_currentDs != ds) {
 		m_currentDs = ds;
 		emit siteImagePathChanged();
@@ -58,6 +71,16 @@ void MapWidgetHelper::centerOnDiveSite(struct dive_site *ds)
 		QGeoCoordinate dsCoord (ds->location.lat.udeg * 0.000001, ds->location.lon.udeg * 0.000001);
 		QMetaObject::invokeMethod(m_map, "centerOnCoordinate", Q_ARG(QVariant, QVariant::fromValue(dsCoord)));
 	}
+}
+
+void MapWidgetHelper::setCurrentDive(struct dive *dive)
+{
+	QString diveKey = dive ? QStringLiteral("%1-%2").arg(dive->number).arg(dive->when) : QString();
+	if (m_currentDiveKey == diveKey)
+		return;
+	m_currentDiveKey = diveKey;
+	emit currentDiveChanged();
+	emit diveImageOverlayChanged();
 }
 
 void MapWidgetHelper::setSelected(const QVector<dive_site *> &divesites)
@@ -331,6 +354,32 @@ void MapWidgetHelper::saveSiteImageViewState(qreal scale, qreal x, qreal y)
 	settings.setValue(key + QStringLiteral("/y"), y);
 }
 
+QString MapWidgetHelper::diveImageOverlay() const
+{
+	if (m_currentDiveKey.isEmpty())
+		return QStringLiteral("[]");
+	QSettings settings;
+	return settings.value(QStringLiteral("DiveImageOverlay/%1").arg(m_currentDiveKey),
+			QStringLiteral("[]")).toString();
+}
+
+QString MapWidgetHelper::currentDiveKey() const
+{
+	return m_currentDiveKey;
+}
+
+void MapWidgetHelper::saveDiveImageOverlay(const QString &overlay)
+{
+	if (m_currentDiveKey.isEmpty())
+		return;
+	QJsonParseError error;
+	QJsonDocument document = QJsonDocument::fromJson(overlay.toUtf8(), &error);
+	if (error.error != QJsonParseError::NoError || !document.isArray())
+		return;
+	QSettings settings;
+	settings.setValue(QStringLiteral("DiveImageOverlay/%1").arg(m_currentDiveKey), overlay);
+}
+
 QUrl MapWidgetHelper::siteImageUrl() const
 {
 	QString path = siteImagePath();
@@ -400,6 +449,17 @@ void MapWidgetHelper::diveSiteChanged(struct dive_site *ds, int field)
 		m_renderedPdfPath.clear();
 		emit siteImagePathChanged();
 	}
+}
+
+void MapWidgetHelper::divesSelected(const QVector<dive *> &, dive *currentDive, int)
+{
+	QString diveKey = currentDive ? QStringLiteral("%1-%2")
+		.arg(currentDive->number).arg(currentDive->when) : QString();
+	if (m_currentDiveKey == diveKey)
+		return;
+	m_currentDiveKey = diveKey;
+	emit currentDiveChanged();
+	emit diveImageOverlayChanged();
 }
 
 bool MapWidgetHelper::editMode() const

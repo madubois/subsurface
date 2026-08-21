@@ -67,6 +67,12 @@ void MapWidget::centerOnIndex(const QModelIndex& idx)
 		centerOnDiveSite(ds);
 }
 
+void MapWidget::setCurrentDive(struct dive *dive)
+{
+	CHECK_IS_READY_RETURN_VOID();
+	m_mapHelper->setCurrentDive(dive);
+}
+
 QString MapWidget::importSiteImage(const QString &path)
 {
 	if (!isReady)

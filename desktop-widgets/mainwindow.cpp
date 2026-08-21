@@ -324,6 +324,8 @@ void MainWindow::updateAutogroup()
 
 void MainWindow::divesSelected(const std::vector<dive *> &selection, dive *currentDive, int currentDC)
 {
+	if (mapWidget)
+		mapWidget->setCurrentDive(currentDive);
 	// We call plotDive first, so that the profile can decide which
 	// dive computer to plot. The plotted dive computer is then
 	// used for displaying data in the tab-widgets.
