@@ -377,8 +377,14 @@ Item {
 
 		function imagePoint(x, y) {
 			var point = siteImageContent.mapFromItem(siteImage, x, y)
-			return { x: Math.max(0, Math.min(1, point.x / siteImageContent.width)),
-				y: Math.max(0, Math.min(1, point.y / siteImageContent.height)) }
+			return { x: Math.max(0, Math.min(1, (point.x - siteImageContent.imageOffsetX) / siteImageContent.paintedWidth)),
+				y: Math.max(0, Math.min(1, (point.y - siteImageContent.imageOffsetY) / siteImageContent.paintedHeight)) }
+		}
+
+		function imagePosition(x, y) {
+			return siteImageContent.mapToItem(siteImage,
+				siteImageContent.imageOffsetX + x * siteImageContent.paintedWidth,
+				siteImageContent.imageOffsetY + y * siteImageContent.paintedHeight)
 		}
 
 		function saveOverlay() {
@@ -443,10 +449,10 @@ Item {
 		function requiredBoxHeight(item, size) {
 			var context = overlayCanvas.getContext("2d")
 			context.font = "bold " + (size * siteImageContent.scale) + "px sans-serif"
-			var maxWidth = (item.boxWidth || 0.35) * siteImageContent.width * siteImageContent.scale
+			var maxWidth = (item.boxWidth || 0.35) * siteImageContent.paintedWidth * siteImageContent.scale
 			var lines = wrappedLines(item.text, context, maxWidth - 16)
 			return (lines.length * size * siteImageContent.scale + 2) /
-				(siteImageContent.height * siteImageContent.scale)
+				(siteImageContent.paintedHeight * siteImageContent.scale)
 		}
 
 		function restoreOverlay() {
@@ -475,6 +481,12 @@ Item {
 			source: mapHelper.siteImageUrl
 			fillMode: Image.PreserveAspectFit
 			scale: 1.0
+			property real imageAspect: sourceSize.width > 0 && sourceSize.height > 0 ? sourceSize.width / sourceSize.height : width / height
+			property real itemAspect: width > 0 && height > 0 ? width / height : imageAspect
+			property real paintedWidth: itemAspect > imageAspect ? height * imageAspect : width
+			property real paintedHeight: itemAspect > imageAspect ? height : width / imageAspect
+			property real imageOffsetX: (width - paintedWidth) * 0.5
+			property real imageOffsetY: (height - paintedHeight) * 0.5
 		}
 
 		Canvas {
@@ -493,10 +505,8 @@ Item {
 				for (var i = 0; i < siteImage.overlayItems.length; ++i) {
 					var item = siteImage.overlayItems[i]
 					if (item.type === "line") {
-						var start = siteImageContent.mapToItem(siteImage,
-							item.x1 * siteImageContent.width, item.y1 * siteImageContent.height)
-						var end = siteImageContent.mapToItem(siteImage,
-							item.x2 * siteImageContent.width, item.y2 * siteImageContent.height)
+						var start = siteImage.imagePosition(item.x1, item.y1)
+						var end = siteImage.imagePosition(item.x2, item.y2)
 						context.beginPath()
 						context.moveTo(start.x, start.y)
 						context.lineTo(end.x, end.y)
@@ -504,13 +514,12 @@ Item {
 					} else if (item.type === "note") {
 						var handle = noteHandles.itemAt(i)
 						var liveSize = handle && handle.visible ? handle.previewSize : (item.size || 20)
-						var notePoint = siteImageContent.mapToItem(siteImage,
-							item.x * siteImageContent.width, item.y * siteImageContent.height)
+						var notePoint = siteImage.imagePosition(item.x, item.y)
 						var liveWidth = handle && handle.visible ? handle.previewWidth : (item.boxWidth || 0.35)
 						var liveHeight = handle && handle.visible ? handle.previewHeight : (item.boxHeight || 0.2)
 						var renderItem = { text: item.text, size: liveSize }
-						var boxWidth = liveWidth * siteImageContent.width * siteImageContent.scale
-						var boxHeight = liveHeight * siteImageContent.height * siteImageContent.scale
+						var boxWidth = liveWidth * siteImageContent.paintedWidth * siteImageContent.scale
+						var boxHeight = liveHeight * siteImageContent.paintedHeight * siteImageContent.scale
 						var fitted = siteImage.fittedNote(renderItem, context, boxWidth, boxHeight)
 						var lines = fitted.lines
 						var lineHeight = fitted.lineHeight
@@ -544,13 +553,12 @@ Item {
 				property real resizeStartMouseX: 0
 				property var notePosition: {
 					var revision = siteImage.imageTransformRevision
-					return siteImageContent.mapToItem(siteImage,
-						modelData.x * siteImageContent.width, modelData.y * siteImageContent.height)
+					return siteImage.imagePosition(modelData.x, modelData.y)
 				}
 				visible: isNote && siteImage.overlayMode === "move"
 				enabled: visible
-				width: previewWidth * siteImageContent.width * siteImageContent.scale
-				height: previewHeight * siteImageContent.height * siteImageContent.scale
+				width: previewWidth * siteImageContent.paintedWidth * siteImageContent.scale
+				height: previewHeight * siteImageContent.paintedHeight * siteImageContent.scale
 				x: notePosition.x - width * 0.5
 				y: notePosition.y - height * 0.5
 				z: 3
@@ -583,8 +591,8 @@ Item {
 					var updated = siteImage.overlayItems.slice(0)
 					updated[index] = { type: "note", text: modelData.text, size: modelData.size || 20,
 						boxWidth: noteItem.previewWidth, boxHeight: noteItem.previewHeight, autoHeight: false,
-						x: Math.max(0, Math.min(1, point.x / siteImageContent.width)),
-						y: Math.max(0, Math.min(1, point.y / siteImageContent.height)) }
+						x: Math.max(0, Math.min(1, (point.x - siteImageContent.imageOffsetX) / siteImageContent.paintedWidth)),
+						y: Math.max(0, Math.min(1, (point.y - siteImageContent.imageOffsetY) / siteImageContent.paintedHeight)) }
 					siteImage.overlayItems = updated
 					siteImage.saveOverlay()
 					}
@@ -608,8 +616,8 @@ Item {
 						}
 						onPositionChanged: {
 							if (pressed) {
-								noteItem.previewWidth = Math.max(0.01, noteItem.resizeStartWidth + (mouseX - noteItem.resizeStartMouseX) / (siteImageContent.width * siteImageContent.scale))
-								noteItem.previewHeight = Math.max(0.01, noteItem.resizeStartHeight + (mouseY - noteItem.resizeStartMouseY) / (siteImageContent.height * siteImageContent.scale))
+								noteItem.previewWidth = Math.max(0.01, noteItem.resizeStartWidth + (mouseX - noteItem.resizeStartMouseX) / (siteImageContent.paintedWidth * siteImageContent.scale))
+								noteItem.previewHeight = Math.max(0.01, noteItem.resizeStartHeight + (mouseY - noteItem.resizeStartMouseY) / (siteImageContent.paintedHeight * siteImageContent.scale))
 								overlayCanvas.requestPaint()
 							}
 						}
@@ -634,6 +642,12 @@ Item {
 			onXChanged: { siteImage.imageTransformRevision++; overlayCanvas.requestPaint() }
 			onYChanged: { siteImage.imageTransformRevision++; overlayCanvas.requestPaint() }
 			onScaleChanged: { siteImage.imageTransformRevision++; overlayCanvas.requestPaint() }
+			onWidthChanged: { siteImage.imageTransformRevision++; overlayCanvas.requestPaint() }
+			onHeightChanged: { siteImage.imageTransformRevision++; overlayCanvas.requestPaint() }
+		}
+
+		Connections {
+			target: siteImage
 			onWidthChanged: { siteImage.imageTransformRevision++; overlayCanvas.requestPaint() }
 			onHeightChanged: { siteImage.imageTransformRevision++; overlayCanvas.requestPaint() }
 		}
