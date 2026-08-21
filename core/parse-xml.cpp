@@ -1423,6 +1423,8 @@ static void try_to_fill_dive_site(struct parser_state *state, const char *name, 
 		return;
 	if (MATCH("description", utf8_string, &ds->description))
 		return;
+	if (MATCH("imagepath", utf8_string, &ds->imagepath))
+		return;
 	if (MATCH("notes", utf8_string, &ds->notes))
 		return;
 	if (MATCH("gps", gps_location, ds))

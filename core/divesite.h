@@ -24,6 +24,7 @@ struct dive_site
 	char *description;
 	char *notes;
 	struct taxonomy_data taxonomy;
+	char *imagepath; /* local path to a user-supplied site image (e.g. a cave map), shown instead of the online map */
 };
 
 typedef struct dive_site_table {

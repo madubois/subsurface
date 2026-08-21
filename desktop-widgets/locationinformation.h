@@ -36,6 +36,8 @@ public slots:
 	void mergeSelectedDiveSites();
 	void mergeIntoSelectedDiveSite();
 	void on_GPSbutton_clicked();
+	void on_selectImageButton_clicked();
+	void on_clearImageButton_clicked();
 private slots:
 	void updateLabels();
 	void diveSiteChanged(struct dive_site *ds, int field);

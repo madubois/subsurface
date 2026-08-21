@@ -282,6 +282,7 @@ void MainWindow::editDiveSite(dive_site *ds)
 	if (!ds)
 		return;
 	diveSiteEdit->initFields(ds);
+	MapWidget::instance()->centerOnDiveSite(ds);
 	state_stack.push_back(appState);
 	setApplicationState(ApplicationState::EditDiveSite);
 }

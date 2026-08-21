@@ -316,6 +316,9 @@ static void parse_dive_invalid(char *, struct git_parser_state *state)
 static void parse_site_description(char *, struct git_parser_state *state)
 { state->active_site->description = get_first_converted_string_c(state); }
 
+static void parse_site_imagepath(char *, struct git_parser_state *state)
+{ state->active_site->imagepath = get_first_converted_string_c(state); }
+
 static void parse_site_name(char *, struct git_parser_state *state)
 { state->active_site->name = get_first_converted_string_c(state); }
 
@@ -1105,7 +1108,7 @@ static void dive_parser(char *line, struct git_parser_state *state)
 static const std::array site_action {
 #undef D
 #define D(x) keyword_action { #x, parse_site_ ## x }
-	D(description), D(geo), D(gps), D(name), D(notes)
+	D(description), D(geo), D(gps), D(imagepath), D(name), D(notes)
 };
 
 static void site_parser(char *line, struct git_parser_state *state)

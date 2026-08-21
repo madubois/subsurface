@@ -930,6 +930,7 @@ static void save_divesites(git_repository *repo, struct dir *tree)
 		put_format(&site_file_name, "Site-%08x", ds->uuid);
 		show_utf8(&b, "name ", ds->name, "\n");
 		show_utf8(&b, "description ", ds->description, "\n");
+		show_utf8(&b, "imagepath ", ds->imagepath, "\n");
 		show_utf8(&b, "notes ", ds->notes, "\n");
 		put_location(&b, &ds->location, "gps ", "\n");
 		for (int j = 0; j < ds->taxonomy.nr; j++) {

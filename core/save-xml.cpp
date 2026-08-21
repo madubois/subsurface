@@ -713,6 +713,7 @@ static void save_dives_buffer(struct membuffer *b, bool select_only, bool anonym
 		show_utf8_blanked(b, ds->name, " name='", "'", 1, anonymize);
 		put_location(b, &ds->location, " gps='", "'");
 		show_utf8_blanked(b, ds->description, " description='", "'", 1, anonymize);
+		show_utf8_blanked(b, ds->imagepath, " imagepath='", "'", 1, anonymize);
 		put_format(b, ">\n");
 		show_utf8_blanked(b, ds->notes, "  <notes>", " </notes>\n", 0, anonymize);
 		if (ds->taxonomy.nr) {
@@ -918,6 +919,7 @@ static void save_dive_sites_buffer(struct membuffer *b, const struct dive_site *
 		show_utf8_blanked(b, ds->name, " name='", "'", 1, anonymize);
 		put_location(b, &ds->location, " gps='", "'");
 		show_utf8_blanked(b, ds->description, " description='", "'", 1, anonymize);
+		show_utf8_blanked(b, ds->imagepath, " imagepath='", "'", 1, anonymize);
 		put_format(b, ">\n");
 		show_utf8_blanked(b, ds->notes, "  <notes>", " </notes>\n", 0, anonymize);
 		if (ds->taxonomy.nr) {

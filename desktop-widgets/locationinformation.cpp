@@ -153,6 +153,10 @@ void LocationInformationWidget::updateLabels()
 	coordinatesSetWarning(false);
 
 	ui.locationTags->setText(constructLocationTags(&diveSite->taxonomy, false));
+	if (diveSite->imagepath)
+		ui.diveSiteImagePath->setText(QString::fromUtf8(diveSite->imagepath));
+	else
+		ui.diveSiteImagePath->clear();
 }
 
 void LocationInformationWidget::unitsChanged()
@@ -195,6 +199,13 @@ void LocationInformationWidget::diveSiteChanged(struct dive_site *ds, int field)
 		}
 		coordinatesSetWarning(false);
 		return;
+	case LocationInformationModel::IMAGEPATH:
+		if (diveSite->imagepath) {
+			ui.diveSiteImagePath->setText(QString::fromUtf8(diveSite->imagepath));
+		} else {
+			ui.diveSiteImagePath->clear();
+		}
+		return;
 	default:
 		return;
 	}
@@ -209,6 +220,7 @@ void LocationInformationWidget::clearLabels()
 	ui.diveSiteCoordinates->clear();
 	coordinatesSetWarning(false);
 	ui.locationTags->clear();
+	ui.diveSiteImagePath->clear();
 }
 
 // Parse GPS text into location_t
@@ -348,6 +360,24 @@ void LocationInformationWidget::reverseGeocode()
 	}
 	// This call transfers ownership of the taxonomy memory into an EditDiveSiteTaxonomy object
 	Command::editDiveSiteTaxonomy(ds, taxonomy);
+}
+
+void LocationInformationWidget::on_selectImageButton_clicked()
+{
+	if (!diveSite)
+		return;
+	QString fn = QFileDialog::getOpenFileName(this,
+		tr("Select an image for this dive site"), QString(),
+		tr("Readable image files (*.png *.jpg *.jpeg *.bmp *.gif *.svg *.pdf);;All files (*)"));
+	if (!fn.isEmpty())
+		MapWidget::instance()->importSiteImage(fn);
+}
+
+void LocationInformationWidget::on_clearImageButton_clicked()
+{
+	if (!diveSite)
+		return;
+	Command::editDiveSiteImagePath(diveSite, QString());
 }
 
 DiveLocationFilterProxyModel::DiveLocationFilterProxyModel(QObject *) : currentLocation(zero_location)

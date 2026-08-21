@@ -116,6 +116,18 @@ private:
 	QString value; // Value to be set
 };
 
+class EditDiveSiteImagePath : public Base {
+public:
+	EditDiveSiteImagePath(dive_site *ds, const QString &imagepath);
+private:
+	bool workToBeDone() override;
+	void undo() override;
+	void redo() override;
+
+	dive_site *ds;
+	QString value; // Value to be set
+};
+
 class EditDiveSiteCountry : public Base {
 public:
 	EditDiveSiteCountry(dive_site *ds, const QString &country);

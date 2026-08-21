@@ -8,6 +8,7 @@ Item {
 	id: rootItem
 	property alias mapHelper: mapHelper
 	property alias map: map
+	readonly property bool siteImageVisible: mapHelper.siteImageUrl.toString().length > 0
 
 	signal selectedDivesChanged(var list)
 
@@ -29,6 +30,7 @@ Item {
 		id: map
 		anchors.fill: parent
 		zoomLevel: defaultZoomIn
+		visible: !rootItem.siteImageVisible
 
 		property var mapType
 		readonly property var defaultCenter: QtPositioning.coordinate(0, 0)
@@ -240,12 +242,16 @@ Item {
 		opacity: 0.0
 		property int isVisible: -1
 		property real padding: 10.0
-		onOpacityChanged: visible = opacity != 0.0
+		onOpacityChanged: visible = !rootItem.siteImageVisible && opacity != 0.0
 		states: [
 			State { when: editMessage.isVisible === 1; PropertyChanges { target: editMessage; opacity: 1.0 }},
 			State { when: editMessage.isVisible === 0; PropertyChanges { target: editMessage; opacity: 0.0 }}
 		]
 		transitions: Transition { NumberAnimation { properties: "opacity"; easing.type: Easing.InOutQuad }}
+		Connections {
+			target: rootItem
+			onSiteImageVisibleChanged: editMessage.visible = !rootItem.siteImageVisible && editMessage.opacity != 0.0
+		}
 		Text {
 			id: editMessageText
 			y: editMessage.padding; x: editMessage.padding
@@ -262,6 +268,7 @@ Item {
 		width: 40
 		height: 40
 		source: "qrc:///map-style-" + (map.activeMapType === map.mapType.SATELLITE ? "map" : "photo") + "-icon"
+		visible: !rootItem.siteImageVisible
 		SequentialAnimation {
 			id: toggleImageAnimation
 			PropertyAnimation { target: toggleImage; property: "scale"; from: 1.0; to: 0.8; duration: 120 }
@@ -282,6 +289,7 @@ Item {
 		width: 20
 		height: 20
 		source: "qrc:///zoom-in-icon"
+		visible: !rootItem.siteImageVisible
 		SequentialAnimation {
 			id: imageZoomInAnimation
 			PropertyAnimation { target: imageZoomIn; property: "scale"; from: 1.0; to: 0.8; duration: 120 }
@@ -305,6 +313,7 @@ Item {
 		id: imageZoomOut
 		x: imageZoomIn.x; y: imageZoomIn.y + imageZoomIn.height + 10
 		source: "qrc:///zoom-out-icon"
+		visible: !rootItem.siteImageVisible
 		width: 20
 		height: 20
 		SequentialAnimation {
@@ -354,8 +363,112 @@ Item {
 		console.log("openLocationInGoogleMaps() map.zoomLevel: " + x + ", url: " + url)
 	}
 
+	Item {
+		id: siteImage
+		anchors.fill: parent
+		visible: rootItem.siteImageVisible
+		clip: true
+
+		Image {
+			id: siteImageContent
+			width: siteImage.width
+			height: siteImage.height
+			x: (siteImage.width - width) * 0.5
+			y: (siteImage.height - height) * 0.5
+			source: mapHelper.siteImageUrl
+			fillMode: Image.PreserveAspectFit
+			scale: 1.0
+		}
+
+		property bool restoringViewState: false
+
+		function restoreViewState() {
+			var state = mapHelper.siteImageViewState()
+			restoringViewState = true
+			if (state.scale !== undefined) {
+				siteImageContent.scale = state.scale
+				siteImageContent.x = state.x
+				siteImageContent.y = state.y
+			} else {
+				siteImageContent.scale = 1.0
+				siteImageContent.x = (siteImage.width - siteImageContent.width) * 0.5
+				siteImageContent.y = (siteImage.height - siteImageContent.height) * 0.5
+			}
+			restoringViewState = false
+		}
+
+		function saveViewState() {
+			if (!restoringViewState)
+				mapHelper.saveSiteImageViewState(siteImageContent.scale, siteImageContent.x, siteImageContent.y)
+		}
+
+		MouseArea {
+			anchors.fill: parent
+			drag.target: siteImageContent
+			onWheel: {
+				var factor = wheel.angleDelta.y > 0 ? 1.2 : 1.0 / 1.2
+				var nextScale = siteImageContent.scale * factor
+				siteImageContent.scale = Math.max(1.0, Math.min(nextScale, 8.0))
+				siteImage.saveViewState()
+				wheel.accepted = true
+			}
+			onDoubleClicked: {
+				siteImageContent.scale = siteImageContent.scale > 1.0 ? 1.0 : 2.0
+				siteImageContent.x = (siteImage.width - siteImageContent.width) * 0.5
+				siteImageContent.y = (siteImage.height - siteImageContent.height) * 0.5
+				siteImage.saveViewState()
+			}
+			onReleased: siteImage.saveViewState()
+		}
+
+		Connections {
+			target: mapHelper
+			onSiteImagePathChanged: {
+				siteImage.restoreViewState()
+			}
+		}
+
+		Rectangle {
+			id: imageOverlay
+			anchors.top: parent.top
+			anchors.right: parent.right
+			anchors.margins: 10
+			width: clearImageButton.width + 20
+			height: clearImageButton.height + 20
+			color: "#b08000"
+			radius: 5
+			visible: mapHelper.editMode && rootItem.siteImageVisible
+
+			MouseArea {
+				id: clearImageButton
+				anchors.centerIn: parent
+				width: clearText.width + 10
+				height: clearText.height + 6
+
+				Text {
+					id: clearText
+					anchors.centerIn: parent
+					text: qsTr("Clear")
+					color: "white"
+					font.pointSize: 10
+				}
+
+				onClicked: mapHelper.clearSiteImage()
+
+				SequentialAnimation {
+					id: clearAnimation
+					PropertyAnimation { target: imageOverlay; property: "scale"; from: 1.0; to: 0.9; duration: 100 }
+					PropertyAnimation { target: imageOverlay; property: "scale"; from: 0.9; to: 1.0; duration: 80 }
+				}
+
+				onPressed: clearAnimation.restart()
+			}
+		}
+	}
+
 	MapWidgetContextMenu {
 		id: contextMenu
+		visible: !rootItem.siteImageVisible
 		y: 10; x: map.width - y
 		onActionSelected: {
 			switch (action) {

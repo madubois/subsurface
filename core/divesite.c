@@ -224,6 +224,7 @@ void free_dive_site(struct dive_site *ds)
 		free(ds->name);
 		free(ds->notes);
 		free(ds->description);
+		free(ds->imagepath);
 		free(ds->dives.dives);
 		free_taxonomy(&ds->taxonomy);
 		free(ds);
@@ -266,6 +267,7 @@ bool dive_site_is_empty(struct dive_site *ds)
 	       (empty_string(ds->name) &&
 	       empty_string(ds->description) &&
 	       empty_string(ds->notes) &&
+	       empty_string(ds->imagepath) &&
 	       !has_location(&ds->location));
 }
 
@@ -274,11 +276,13 @@ void copy_dive_site(struct dive_site *orig, struct dive_site *copy)
 	free(copy->name);
 	free(copy->notes);
 	free(copy->description);
+	free(copy->imagepath);
 
 	copy->location = orig->location;
 	copy->name = copy_string(orig->name);
 	copy->notes = copy_string(orig->notes);
 	copy->description = copy_string(orig->description);
+	copy->imagepath = copy_string(orig->imagepath);
 	copy_taxonomy(&orig->taxonomy, &copy->taxonomy);
 }
 
@@ -331,6 +335,8 @@ void merge_dive_site(struct dive_site *a, struct dive_site *b)
 	merge_string(&a->name, &b->name);
 	merge_string(&a->notes, &b->notes);
 	merge_string(&a->description, &b->description);
+	if (empty_string(a->imagepath))
+		merge_string(&a->imagepath, &b->imagepath);
 
 	if (!a->taxonomy.category) {
 		a->taxonomy = b->taxonomy;

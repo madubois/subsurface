@@ -255,6 +255,29 @@ void EditDiveSiteNotes::undo()
 	redo();
 }
 
+EditDiveSiteImagePath::EditDiveSiteImagePath(dive_site *dsIn, const QString &imagepath) : ds(dsIn),
+	value(imagepath)
+{
+	setText(Command::Base::tr("Edit dive site image"));
+}
+
+bool EditDiveSiteImagePath::workToBeDone()
+{
+	return value != QString(ds->imagepath);
+}
+
+void EditDiveSiteImagePath::redo()
+{
+	swap(ds->imagepath, value);
+	emit diveListNotifier.diveSiteChanged(ds, LocationInformationModel::IMAGEPATH); // Inform frontend of changed dive site.
+}
+
+void EditDiveSiteImagePath::undo()
+{
+	// Undo and redo do the same
+	redo();
+}
+
 EditDiveSiteCountry::EditDiveSiteCountry(dive_site *dsIn, const QString &country) : ds(dsIn),
 	value(country)
 {

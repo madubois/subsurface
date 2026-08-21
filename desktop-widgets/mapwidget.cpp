@@ -67,6 +67,13 @@ void MapWidget::centerOnIndex(const QModelIndex& idx)
 		centerOnDiveSite(ds);
 }
 
+QString MapWidget::importSiteImage(const QString &path)
+{
+	if (!isReady)
+		return QString();
+	return m_mapHelper->importSiteImage(path);
+}
+
 void MapWidget::reload()
 {
 	CHECK_IS_READY_RETURN_VOID();

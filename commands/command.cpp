@@ -114,6 +114,11 @@ void editDiveSiteNotes(dive_site *ds, const QString &value)
 	execute(new EditDiveSiteNotes(ds, value));
 }
 
+void editDiveSiteImagePath(dive_site *ds, const QString &value)
+{
+	execute(new EditDiveSiteImagePath(ds, value));
+}
+
 void editDiveSiteCountry(dive_site *ds, const QString &value)
 {
 	execute(new EditDiveSiteCountry(ds, value));
