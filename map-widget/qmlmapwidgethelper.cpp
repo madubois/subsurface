@@ -76,11 +76,19 @@ void MapWidgetHelper::centerOnDiveSite(struct dive_site *ds)
 void MapWidgetHelper::setCurrentDive(struct dive *dive)
 {
 	QString diveKey = dive ? QStringLiteral("%1-%2").arg(dive->number).arg(dive->when) : QString();
-	if (m_currentDiveKey == diveKey)
-		return;
-	m_currentDiveKey = diveKey;
-	emit currentDiveChanged();
-	emit diveImageOverlayChanged();
+	struct dive_site *diveSite = dive ? get_dive_site_for_dive(dive) : nullptr;
+	bool diveChanged = m_currentDiveKey != diveKey;
+	bool siteChanged = m_currentDs != diveSite;
+
+	if (diveChanged) {
+		m_currentDiveKey = diveKey;
+		emit currentDiveChanged();
+		emit diveImageOverlayChanged();
+	}
+	if (siteChanged) {
+		m_currentDs = diveSite;
+		emit siteImagePathChanged();
+	}
 }
 
 void MapWidgetHelper::setSelected(const QVector<dive_site *> &divesites)

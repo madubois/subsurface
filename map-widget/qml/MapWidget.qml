@@ -549,6 +549,7 @@ Item {
 			x: (siteImage.width - width) * 0.5
 			y: (siteImage.height - height) * 0.5
 			source: mapHelper.siteImageUrl
+			cache: false
 			fillMode: Image.PreserveAspectFit
 			scale: 1.0
 			property real imageAspect: sourceSize.width > 0 && sourceSize.height > 0 ? sourceSize.width / sourceSize.height : width / height
@@ -1005,6 +1006,8 @@ Item {
 		Connections {
 			target: mapHelper
 			onSiteImagePathChanged: {
+				siteImageContent.source = ""
+				siteImageContent.source = mapHelper.siteImageUrl
 				siteImage.restoreOverlay()
 				siteImage.restoreViewState()
 			}
