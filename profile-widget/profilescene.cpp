@@ -151,19 +151,19 @@ ProfileScene::ProfileScene(double dpr, bool printMode, bool isGrayscale) :
 	empty(true),
 	maxtime(-1),
 	maxdepth(-1),
-	profileYAxis(new DiveCartesianAxis(DiveCartesianAxis::Position::Left, true, 3, 0, TIME_GRID, Qt::black, true, true,
+	profileYAxis(new DiveCartesianAxis(DiveCartesianAxis::Position::Left, true, 3, 0, TIME_GRID, QColor("#324b64"), true, true,
 				   dpr, 1.0, printMode, isGrayscale, *this)),
-	gasYAxis(new DiveCartesianAxis(DiveCartesianAxis::Position::Right, false, 1, 2, TIME_GRID, Qt::black, true, true,
+	gasYAxis(new DiveCartesianAxis(DiveCartesianAxis::Position::Right, false, 1, 2, TIME_GRID, QColor("#324b64"), true, true,
 				       dpr, 0.7, printMode, isGrayscale, *this)),
-	temperatureAxis(new DiveCartesianAxis(DiveCartesianAxis::Position::Right, false, 3, 0, TIME_GRID, Qt::black, false, false,
+	temperatureAxis(new DiveCartesianAxis(DiveCartesianAxis::Position::Right, false, 3, 0, TIME_GRID, QColor("#324b64"), false, false,
 					    dpr, 1.0, printMode, isGrayscale, *this)),
-	timeAxis(new DiveCartesianAxis(DiveCartesianAxis::Position::Bottom, false, 2, 2, TIME_GRID, Qt::black, true, true,
+	timeAxis(new DiveCartesianAxis(DiveCartesianAxis::Position::Bottom, false, 2, 2, TIME_GRID, QColor("#324b64"), true, true,
 			      dpr, 1.0, printMode, isGrayscale, *this)),
-	cylinderPressureAxis(new DiveCartesianAxis(DiveCartesianAxis::Position::Right, false, 4, 0, TIME_GRID, Qt::black, false, false,
+	cylinderPressureAxis(new DiveCartesianAxis(DiveCartesianAxis::Position::Right, false, 4, 0, TIME_GRID, QColor("#324b64"), false, false,
 						   dpr, 1.0, printMode, isGrayscale, *this)),
-	heartBeatAxis(new DiveCartesianAxis(DiveCartesianAxis::Position::Left, false, 3, 0, HR_AXIS, Qt::black, true, true,
+	heartBeatAxis(new DiveCartesianAxis(DiveCartesianAxis::Position::Left, false, 3, 0, HR_AXIS, QColor("#324b64"), true, true,
 					    dpr, 0.7, printMode, isGrayscale, *this)),
-	percentageAxis(new DiveCartesianAxis(DiveCartesianAxis::Position::Right, false, 2, 0, TIME_GRID, Qt::black, false, false,
+	percentageAxis(new DiveCartesianAxis(DiveCartesianAxis::Position::Right, false, 2, 0, TIME_GRID, QColor("#324b64"), false, false,
 					     dpr, 0.7, printMode, isGrayscale, *this)),
 	diveProfileItem(createItem<DiveProfileItem>(*profileYAxis,
 						    [](const plot_data &item) { return (double)item.depth; },
@@ -238,6 +238,17 @@ ProfileScene::ProfileScene(double dpr, bool printMode, bool isGrayscale) :
 	addItem(percentageAxis);
 	addItem(heartBeatAxis);
 	addItem(percentageItem);
+
+	// Harmonize plot palette with the desktop redesign: app blue + decompression red.
+	pn2GasItem->setColors(QColor("#2f7ea0"), QColor("#c2473e"));
+	pheGasItem->setColors(QColor("#256f90"), QColor("#c2473e"));
+	// O2 lines are green to match oxygen semantics.
+	po2GasItem->setColors(QColor("#2f9d66"), QColor("#c2473e"));
+	o2SetpointGasItem->setColors(QColor("#3cab74"), QColor("#c2473e"));
+	ccrsensor1GasItem->setColors(QColor("#45b37b"), QColor("#c2473e"));
+	ccrsensor2GasItem->setColors(QColor("#37a46f"), QColor("#c2473e"));
+	ccrsensor3GasItem->setColors(QColor("#2c9563"), QColor("#c2473e"));
+	ocpo2GasItem->setColors(QColor("#54bf88"), QColor("#c2473e"));
 
 	for (AbstractProfilePolygonItem *item: profileItems)
 		addItem(item);
@@ -371,9 +382,8 @@ void ProfileScene::updateAxes(bool diveHasHeartBeat, bool simplified)
 
 	profileYAxis->setGridIsMultipleOfThree( qPrefDisplay::three_m_based_grid() );
 
-	// Place the fixed dive computer text at the bottom
-	double bottomBorder = sceneRect().height() - diveComputerText->height() - 2.0 * dpr * diveComputerTextBorder;
-	diveComputerText->setPos(0.0, bottomBorder + dpr * diveComputerTextBorder);
+	// Keep full vertical space for the plot; dive computer text is overlaid inside the profile region.
+	double bottomBorder = sceneRect().height() - 2.0 * dpr * diveComputerTextBorder;
 
 	double topBorder = 0.0;
 
@@ -386,6 +396,8 @@ void ProfileScene::updateAxes(bool diveHasHeartBeat, bool simplified)
 	bottomBorder -= timeAxis->height();
 	profileRegion = QRectF(leftBorder, topBorder, width, bottomBorder - topBorder);
 	timeAxis->setPosition(profileRegion);
+	diveComputerText->setPos(leftBorder + 6.0 * dpr,
+		profileRegion.bottom() - diveComputerText->height() - 4.0 * dpr);
 
 	if (prefs.tankbar) {
 		bottomBorder -= tankItem->height();
@@ -480,9 +492,9 @@ void ProfileScene::plotDive(const struct dive *dIn, int dcIn, DivePlannerPointsM
 		return;
 	}
 
-	decoModelParameters->setBold(true);
+	decoModelParameters->setBold(false);
 	QString location = d->dive_site && d->dive_site->name ? QString::fromUtf8(d->dive_site->name) : tr("Unknown location");
-	decoModelParameters->set(location, Qt::black);
+	decoModelParameters->set(location, QColor("#33516c"));
 
 	// If we come from the empty state, the plot info has to be recalculated.
 	if (empty)
@@ -659,7 +671,7 @@ void ProfileScene::plotDive(const struct dive *dIn, int dcIn, DivePlannerPointsM
 	int nr = number_of_computers(d);
 	if (nr > 1)
 		dcText += tr(" (#%1 of %2)").arg(dc + 1).arg(nr);
-	diveComputerText->set(dcText, Qt::black);
+	diveComputerText->set(dcText, QColor("#33516c"));
 
 	// Reset animation.
 	if (animSpeed <= 0)

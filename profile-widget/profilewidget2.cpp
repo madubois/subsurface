@@ -174,6 +174,7 @@ void ProfileWidget2::replot()
 void ProfileWidget2::setupSceneAndFlags()
 {
 	setScene(profileScene.get());
+	setFrameShape(QFrame::NoFrame);
 	setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 	setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 	setOptimizationFlags(QGraphicsView::DontSavePainterState);
@@ -429,7 +430,7 @@ void ProfileWidget2::setProfileState()
 	disconnectPlannerModel();
 
 	currentState = PROFILE;
-	setBackgroundBrush(Qt::white);
+	setBackgroundBrush(QColor("#fbfdff"));
 
 #ifndef SUBSURFACE_MOBILE
 	toolTipItem->readPos();
@@ -473,7 +474,7 @@ void ProfileWidget2::setPlanState(const dive *d, int dc)
 	connectPlannerModel();
 
 	currentState = PLAN;
-	setBackgroundBrush(QColor("#D7E3EF"));
+	setBackgroundBrush(QColor("#ecf3fa"));
 
 	pointsReset();
 	repositionDiveHandlers();

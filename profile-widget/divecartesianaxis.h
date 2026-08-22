@@ -59,6 +59,7 @@ private:
 		std::unique_ptr<DiveTextItem> label;
 		std::unique_ptr<DiveLineItem> line;
 	};
+	std::vector<std::unique_ptr<DiveLineItem>> minorLines;
 	Position position;
 	bool inverted; // Top-to-bottom or right-to-left axis.
 	int fractionalDigits;
@@ -68,7 +69,8 @@ private:
 	ProfileScene &scene;
 	double posAtValue(double value, double max, double min) const;
 	QPointF labelPos(double pos) const;
-	QLineF linePos(double pos) const;
+	QLineF linePos(double pos, bool minorTick = false) const;
+	void updateMinorTicks(int numTicks, double firstPosScreen, double stepScreen);
 	void updateLabel(Label &label, double opacityEnd, double pos) const;
 	Label createLabel(double value, double pos, double dataMinOld, double dataMaxOld, int animSpeed, bool noLabel);
 	QString textForValue(double value) const;

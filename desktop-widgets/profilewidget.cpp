@@ -11,9 +11,12 @@
 #include "qt-models/diveplannermodel.h"
 
 #include <QToolBar>
+#include <QToolButton>
 #include <QHBoxLayout>
 #include <QStackedWidget>
 #include <QLabel>
+#include <QResizeEvent>
+#include <QSettings>
 
 // The empty profile area shown when no dive is loaded.
 class EmptyView : public QLabel {
@@ -30,7 +33,7 @@ EmptyView::EmptyView(QWidget *parent) : QLabel(parent)
 	setMinimumSize(1,1);
 }
 
-ProfileWidget::ProfileWidget() : d(nullptr), dc(0), placingCommand(false)
+ProfileWidget::ProfileWidget() : d(nullptr), dc(0), profileToolBar(nullptr), profileToggleButton(nullptr), placingCommand(false)
 {
 	ui.setupUi(this);
 
@@ -51,15 +54,38 @@ ProfileWidget::ProfileWidget() : d(nullptr), dc(0), placingCommand(false)
 	emptyView.reset(new EmptyView);
 
 	view.reset(new ProfileWidget2(DivePlannerPointsModel::instance(), 1.0, this));
-	QToolBar *toolBar = new QToolBar(this);
+	profileToolBar = new QToolBar(this);
 	for (QAction *a: toolbarActions)
-		toolBar->addAction(a);
-	toolBar->setOrientation(Qt::Vertical);
-	toolBar->setIconSize(QSize(24, 24));
+		profileToolBar->addAction(a);
+	profileToolBar->setObjectName("profileToggleBar");
+	profileToolBar->setOrientation(Qt::Vertical);
+	profileToolBar->setIconSize(QSize(24, 24));
+	profileToolBar->setMovable(false);
+	profileToolBar->setFloatable(false);
+	profileToolBar->setToolButtonStyle(Qt::ToolButtonIconOnly);
 
 	stack = new QStackedWidget(this);
 	stack->addWidget(emptyView.get());
 	stack->addWidget(view.get());
+
+	profileToggleButton = new QToolButton(this);
+	profileToggleButton->setObjectName("profileToggleBarButton");
+	profileToggleButton->setCheckable(true);
+	profileToggleButton->setChecked(true);
+	profileToggleButton->setAutoRaise(false);
+	profileToggleButton->setToolTip(tr("Hide profile toggles"));
+	profileToggleButton->setText("<");
+	profileToggleButton->setFixedSize(24, 24);
+	profileToggleButton->raise();
+	connect(profileToggleButton, &QToolButton::clicked, this, &ProfileWidget::toggleProfileToolBar);
+	{
+		QSettings settings;
+		bool toolbarVisible = settings.value("Profile/toggleBarVisible", true).toBool();
+		profileToggleButton->setChecked(toolbarVisible);
+		profileToolBar->setVisible(toolbarVisible);
+		profileToggleButton->setToolTip(toolbarVisible ? tr("Hide profile toggles") : tr("Show profile toggles"));
+		profileToggleButton->setText(toolbarVisible ? "<" : ">");
+	}
 
 	QHBoxLayout *layout = new QHBoxLayout(this);
 	layout->setSpacing(0);
@@ -67,9 +93,10 @@ ProfileWidget::ProfileWidget() : d(nullptr), dc(0), placingCommand(false)
 	layout->setMargin(0);
 #endif
 	layout->setContentsMargins(0, 0, 0, 0);
-	layout->addWidget(toolBar);
+	layout->addWidget(profileToolBar);
 	layout->addWidget(stack);
 	setLayout(layout);
+	positionProfileToggleButton();
 
 	// Toolbar Connections related to the Profile Update
 	auto tec = qPrefTechnicalDetails::instance();
@@ -131,6 +158,33 @@ ProfileWidget::ProfileWidget() : d(nullptr), dc(0), placingCommand(false)
 
 ProfileWidget::~ProfileWidget()
 {
+}
+
+void ProfileWidget::toggleProfileToolBar()
+{
+	bool show = profileToggleButton->isChecked();
+	profileToolBar->setVisible(show);
+	QSettings settings;
+	settings.setValue("Profile/toggleBarVisible", show);
+	profileToggleButton->setToolTip(show ? tr("Hide profile toggles") : tr("Show profile toggles"));
+	profileToggleButton->setText(show ? "<" : ">");
+	positionProfileToggleButton();
+}
+
+void ProfileWidget::resizeEvent(QResizeEvent *event)
+{
+	QWidget::resizeEvent(event);
+	positionProfileToggleButton();
+}
+
+void ProfileWidget::positionProfileToggleButton()
+{
+	if (!profileToggleButton || !stack || !profileToolBar)
+		return;
+	int x = profileToolBar->isVisible() ? profileToolBar->geometry().right() - profileToggleButton->width() / 2 : 8;
+	int y = 8;
+	profileToggleButton->move(x, y);
+	profileToggleButton->raise();
 }
 
 void ProfileWidget::setEnabledToolbar(bool enabled)

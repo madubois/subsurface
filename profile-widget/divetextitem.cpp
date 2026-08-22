@@ -7,7 +7,7 @@
 #include <QBrush>
 #include <QApplication>
 
-static const double outlineSize = 3.0;
+static const double outlineSize = 1.4;
 
 DiveTextItem::DiveTextItem(double dpr, double scale, int alignFlags, QGraphicsItem *parent) : QGraphicsPixmapItem(parent),
 	internalAlignFlags(alignFlags),
@@ -20,7 +20,10 @@ DiveTextItem::DiveTextItem(double dpr, double scale, int alignFlags, QGraphicsIt
 
 static QFont getFont(double dpr, double scale)
 {
-	QFont fnt(qApp->font());
+	QFont fnt(QApplication::font("QLabel"));
+	fnt.setStyleStrategy(QFont::PreferAntialias);
+	fnt.setHintingPreference(QFont::PreferFullHinting);
+	fnt.setKerning(true);
 	double size = fnt.pixelSize();
 	if (size > 0) {
 		// set in pixels - so the scale factor may not make a difference if it's too close to 1
@@ -59,7 +62,7 @@ void DiveTextItem::set(const QString &t, const QBrush &b)
 	pixmap.fill(Qt::transparent);
 	{
 		QPainter painter(&pixmap);
-		painter.setRenderHints(QPainter::Antialiasing);
+		painter.setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform);
 		painter.setBrush(QBrush(getColor(TEXT_BACKGROUND)));
 		painter.setPen(Qt::NoPen);
 		painter.drawPath(outlinePath);

@@ -1018,21 +1018,67 @@ Item {
 			id: overlayToolbar
 			anchors.left: parent.left
 			anchors.top: parent.top
-			anchors.margins: 8
-			width: overlayTools.width + 16
-			height: 44
-			color: "#8c202020"
-			radius: 4
+			anchors.margins: 12
+			width: overlayTools.width + 20
+			height: 48
+			color: "#e6ffffff"
+			border.color: "#66c1d3de"
+			border.width: 1
+			radius: 14
 			visible: rootItem.siteImageVisible
 
 			Row {
 				id: overlayTools
 				anchors.centerIn: parent
-				spacing: 4
-				Rectangle { visible: siteImage.overlayMode === "none"; width: 52; height: 26; color: "#454545"; Text { anchors.centerIn: parent; color: "white"; text: qsTr("Edit") } MouseArea { anchors.fill: parent; onClicked: siteImage.overlayMode = "edit" } }
-				Rectangle { visible: siteImage.overlayMode !== "none"; width: 52; height: 26; color: siteImage.overlayMode === "line" ? "#c94a4a" : "#454545"; Text { anchors.centerIn: parent; color: "white"; text: qsTr("Line") } MouseArea { anchors.fill: parent; onClicked: siteImage.overlayMode = "line" } }
-				Rectangle { visible: siteImage.overlayMode !== "none"; width: 52; height: 26; color: "#454545"; Text { anchors.centerIn: parent; color: "white"; text: qsTr("Text") } MouseArea { anchors.fill: parent; onClicked: siteImage.createTextBox() } }
-				Rectangle { visible: siteImage.overlayMode !== "none"; width: 52; height: 26; color: "#454545"; Text { anchors.centerIn: parent; color: "white"; text: qsTr("Close") } MouseArea { anchors.fill: parent; onClicked: { siteImage.overlayMode = "none"; siteImage.selectedOverlayIndex = -1 } } }
+				spacing: 8
+
+				Rectangle {
+					visible: siteImage.overlayMode === "none"
+					width: 58
+					height: 30
+					color: "#f4f8fc"
+					border.color: "#ccd8e5"
+					border.width: 1
+					radius: 8
+					Text { anchors.centerIn: parent; color: "#274765"; text: qsTr("Edit"); font.bold: true }
+					MouseArea { anchors.fill: parent; onClicked: siteImage.overlayMode = "edit" }
+				}
+
+				Rectangle {
+					visible: siteImage.overlayMode !== "none"
+					width: 58
+					height: 30
+					color: siteImage.overlayMode === "line" ? "#cf6a57" : "#f4f8fc"
+					border.color: siteImage.overlayMode === "line" ? "#b95f4f" : "#ccd8e5"
+					border.width: 1
+					radius: 8
+					Text { anchors.centerIn: parent; color: siteImage.overlayMode === "line" ? "white" : "#274765"; text: qsTr("Line"); font.bold: true }
+					MouseArea { anchors.fill: parent; onClicked: siteImage.overlayMode = "line" }
+				}
+
+				Rectangle {
+					visible: siteImage.overlayMode !== "none"
+					width: 58
+					height: 30
+					color: "#f4f8fc"
+					border.color: "#ccd8e5"
+					border.width: 1
+					radius: 8
+					Text { anchors.centerIn: parent; color: "#274765"; text: qsTr("Text"); font.bold: true }
+					MouseArea { anchors.fill: parent; onClicked: siteImage.createTextBox() }
+				}
+
+				Rectangle {
+					visible: siteImage.overlayMode !== "none"
+					width: 58
+					height: 30
+					color: "#f4f8fc"
+					border.color: "#ccd8e5"
+					border.width: 1
+					radius: 8
+					Text { anchors.centerIn: parent; color: "#274765"; text: qsTr("Close"); font.bold: true }
+					MouseArea { anchors.fill: parent; onClicked: { siteImage.overlayMode = "none"; siteImage.selectedOverlayIndex = -1 } }
+				}
 			}
 		}
 

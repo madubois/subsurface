@@ -14,6 +14,9 @@ struct dive;
 class ProfileWidget2;
 class EmptyView;
 class QStackedWidget;
+class QToolBar;
+class QToolButton;
+class QResizeEvent;
 
 extern "C" void free_dive(struct dive *);
 
@@ -37,19 +40,24 @@ slots:
 	void cylindersChanged(struct dive *changed, int pos);
 	void unsetProfHR();
 	void unsetProfTissues();
+	void toggleProfileToolBar();
 	void stopAdded();
 	void stopRemoved(int count);
 	void stopMoved(int count);
 	void stopEdited();
 private:
+	void resizeEvent(QResizeEvent *event) override;
 	std::unique_ptr<EmptyView> emptyView;
 	std::vector<QAction *> toolbarActions;
 	Ui::ProfileWidget ui;
 	QStackedWidget *stack;
+	QToolBar *profileToolBar;
+	QToolButton *profileToggleButton;
 	void setDive(const struct dive *d, int dcNr);
 	void editDive();
 	void exitEditMode();
 	void rotateDC(int dir);
+	void positionProfileToggleButton();
 	OwningDivePtr editedDive;
 	bool placingCommand;
 };

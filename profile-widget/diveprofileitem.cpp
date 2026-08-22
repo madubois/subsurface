@@ -116,9 +116,9 @@ void DiveProfileItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
 	QGraphicsPolygonItem::paint(painter, option, widget);
 
 	QPen pen;
-	pen.setColor(Qt::black);
+	pen.setColor(QColor("#2a6f8b"));
 	pen.setCosmetic(true);
-	pen.setWidth(2);
+	pen.setWidth(1);
 	QPolygonF poly = polygon();
 	for (int i = from + 1; i < to; i++) {
 		painter->setPen(pen);
@@ -139,8 +139,7 @@ void DiveProfileItem::replot(const dive *d, int from, int to, bool in_planner)
 	if (polygon().isEmpty())
 		return;
 
-	profileColor = pInfo.waypoint_above_ceiling ? QColor(Qt::red)
-						    : getColor(DEPTH_BOTTOM).darker(150);
+	profileColor = pInfo.waypoint_above_ceiling ? QColor("#c74b42") : QColor("#1c7c94");
 
 	/* Show any ceiling we may have encountered */
 	if (prefs.dcceiling && !prefs.redceiling) {
@@ -158,8 +157,13 @@ void DiveProfileItem::replot(const dive *d, int from, int to, bool in_planner)
 	}
 
 	QLinearGradient pat(0, polygon().boundingRect().top(), 0, polygon().boundingRect().bottom());
-	pat.setColorAt(1, profileColor);
-	pat.setColorAt(0, profileColor);
+	if (pInfo.waypoint_above_ceiling) {
+		pat.setColorAt(0, QColor("#e18e84"));
+		pat.setColorAt(1, QColor("#b93f37"));
+	} else {
+		pat.setColorAt(0, QColor("#d6e8ff"));
+		pat.setColorAt(1, QColor("#5f97c8"));
+	}
 	setBrush(QBrush(pat));
 
 	// No point in searching peaks with less than three samples
@@ -185,7 +189,7 @@ void DiveProfileItem::replot(const dive *d, int from, int to, bool in_planner)
 	while (!stack.empty()) {
 		Peak act_peak = stack.back();
 		stack.pop_back();
-		plot_depth_sample(data[act_peak.peak], Qt::AlignHCenter | Qt::AlignTop, getColor(SAMPLE_DEEP));
+		plot_depth_sample(data[act_peak.peak], Qt::AlignHCenter | Qt::AlignTop, QColor(Qt::black));
 
 		// Skip half_interval seconds to the left and right of peak
 		// and add new peaks if there is enough place.
@@ -209,7 +213,7 @@ void DiveProfileItem::replot(const dive *d, int from, int to, bool in_planner)
 				stack.push_back(Peak{ new_from, act_peak.range_to, new_peak });
 
 				if (data[valley].depth >= min_depth)
-					plot_depth_sample(data[valley], Qt::AlignHCenter | Qt::AlignBottom, getColor(SAMPLE_SHALLOW));
+					plot_depth_sample(data[valley], Qt::AlignHCenter | Qt::AlignBottom, QColor(Qt::black));
 				break;
 			}
 			if (data[new_from].depth < data[valley].depth)
@@ -235,7 +239,7 @@ void DiveProfileItem::replot(const dive *d, int from, int to, bool in_planner)
 				stack.push_back(Peak{ act_peak.range_from, new_to, new_peak });
 
 				if (data[valley].depth >= min_depth)
-					plot_depth_sample(data[valley], Qt::AlignHCenter | Qt::AlignBottom, getColor(SAMPLE_SHALLOW));
+					plot_depth_sample(data[valley], Qt::AlignHCenter | Qt::AlignBottom, QColor(Qt::black));
 				break;
 			}
 			if (data[new_to].depth < data[valley].depth)
@@ -346,9 +350,9 @@ DiveTemperatureItem::DiveTemperatureItem(const plot_info &pInfo, const DiveCarte
 	AbstractProfilePolygonItem(pInfo, hAxis, vAxis, accessor, dpr)
 {
 	QPen pen;
-	pen.setBrush(QBrush(getColor(::TEMP_PLOT)));
+	pen.setBrush(QBrush(QColor("#6e7781")));
 	pen.setCosmetic(true);
-	pen.setWidth(2);
+	pen.setWidth(0);
 	setPen(pen);
 }
 
@@ -409,7 +413,7 @@ void DiveTemperatureItem::createTextItem(int sec, int mkelvin, bool last)
 	int flags = last ? Qt::AlignLeft | Qt::AlignBottom :
 			   Qt::AlignRight | Qt::AlignBottom;
 	auto text = std::make_unique<DiveTextItem>(dpr, 0.8, flags, this);
-	text->set(get_temperature_string(temp, true), getColor(TEMP_TEXT));
+	text->set(get_temperature_string(temp, true), QColor(Qt::black));
 	text->setPos(QPointF(hAxis.posAtValue(sec), vAxis.posAtValue(mkelvin)));
 	texts.push_back(std::move(text));
 }
@@ -636,7 +640,7 @@ double DiveGasPressureItem::plotPressureValue(double mbar, double sec, QFlags<Qt
 	const char *unit;
 	auto label = QStringLiteral("%1%2").arg(get_pressure_units(lrint(mbar), &unit)).arg(unit);
 	auto text = std::make_unique<DiveTextItem>(dpr, 1.0, align, this);
-	text->set(label, getColor(PRESSURE_TEXT));
+	text->set(label, QColor(Qt::black));
 	text->setPos(hAxis.posAtValue(sec), vAxis.posAtValue(mbar) + y_offset);
 	texts.push_back(std::move(text));
 
@@ -652,7 +656,7 @@ void DiveGasPressureItem::plotGasValue(double mbar, double sec, const cylinder_t
 	else
 		label = gas;
 	auto text = std::make_unique<DiveTextItem>(dpr, 1.0, align, this);
-	text->set(label, getColor(PRESSURE_TEXT));
+	text->set(label, QColor(Qt::black));
 	text->setPos(hAxis.posAtValue(sec) - x_offset, vAxis.posAtValue(mbar) + y_offset);
 	texts.push_back(std::move(text));
 }
@@ -663,11 +667,11 @@ void DiveGasPressureItem::paint(QPainter *painter, const QStyleOptionGraphicsIte
 		return;
 	QPen pen;
 	pen.setCosmetic(true);
-	pen.setWidth(2);
+	pen.setWidth(0);
 	painter->save();
 	for (const Segment &segment: segments) {
 		for (size_t i = 1; i < segment.polygon.size(); i++) {
-			pen.setBrush(segment.polygon[i].col);
+			pen.setBrush(QBrush(QColor("#6e7781")));
 			painter->setPen(pen);
 			painter->drawLine(segment.polygon[i - 1].pos, segment.polygon[i].pos);
 		}
@@ -686,8 +690,8 @@ void DiveCalculatedCeiling::replot(const dive *d, int from, int to, bool in_plan
 	makePolygon(from, to);
 
 	QLinearGradient pat(0, polygon().boundingRect().top(), 0, polygon().boundingRect().bottom());
-	pat.setColorAt(0, getColor(CALC_CEILING_SHALLOW));
-	pat.setColorAt(1, getColor(CALC_CEILING_DEEP));
+	pat.setColorAt(0, QColor("#f3aba2"));
+	pat.setColorAt(1, QColor("#c2473e"));
 	setPen(QPen(QBrush(Qt::NoBrush), 0));
 	setBrush(pat);
 }
@@ -748,7 +752,7 @@ void DiveReportedCeiling::replot(const dive *, int fromIn, int toIn, bool)
 	}
 	setPolygon(p);
 	setPen(QPen(QBrush(Qt::NoBrush), 0));
-	setBrush(QBrush(QColor(Qt::red).darker(120)));
+	setBrush(QBrush(QColor("#b94038")));
 }
 
 void DiveReportedCeiling::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)

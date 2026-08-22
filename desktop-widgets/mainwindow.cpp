@@ -16,6 +16,8 @@
 #include <QStatusBar>
 #include <QNetworkProxy>
 #include <QUndoStack>
+#include <QFile>
+#include <QStyleFactory>
 
 #include "core/color.h"
 #include "core/device.h"
@@ -80,6 +82,18 @@ namespace {
 	QProgressDialog *progressDialog = nullptr;
 	bool progressDialogCanceled = false;
 	int progressCounter = 0;
+
+	void applyDesktopTheme()
+	{
+		if (QStyleFactory::keys().contains("Fusion"))
+			qApp->setStyle(QStyleFactory::create("Fusion"));
+
+		QFile styleFile(":/desktop-widgets/css/desktop-theme.qss");
+		if (!styleFile.open(QIODevice::ReadOnly | QIODevice::Text))
+			return;
+
+		qApp->setStyleSheet(QString::fromUtf8(styleFile.readAll()));
+	}
 }
 
 extern "C" int updateProgress(const char *text)
@@ -126,6 +140,7 @@ MainWindow::MainWindow() :
 	Q_ASSERT_X(m_Instance == NULL, "MainWindow", "MainWindow recreated!");
 	m_Instance = this;
 	ui.setupUi(this);
+	applyDesktopTheme();
 	read_hashes();
 	Command::init();
 	// Define the States of the Application Here, Currently the states are situations where the different

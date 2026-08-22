@@ -36,17 +36,17 @@ DiveCartesianAxis::DiveCartesianAxis(Position position, bool inverted, int integ
 	transform({1.0, 0.0})
 {
 	QPen pen;
-	pen.setColor(Qt::black);
+	pen.setColor(textColor);
 	/* cosmetic width() == 0 for lines in printMode
 	 * having setCosmetic(true) and width() > 0 does not work when
 	 * printing on OSX and Linux */
 	pen.setWidth(DiveCartesianAxis::printMode ? 0 : 2);
 	pen.setCosmetic(true);
-	setPen(pen);
+	setPen(Qt::NoPen);
 
 	pen.setColor(getColor(gridColor, isGrayscale));
 	pen.setWidth(1);
-	pen.setStyle(Qt::NoPen);
+	pen.setStyle(Qt::SolidLine);
 	gridPen = pen;
 
 	/* Create the longest expected label, e.g. 999.99. */
@@ -71,6 +71,7 @@ DiveCartesianAxis::DiveCartesianAxis(Position position, bool inverted, int integ
 
 DiveCartesianAxis::~DiveCartesianAxis()
 {
+	minorLines.clear();
 }
 
 void DiveCartesianAxis::setTransform(double a, double b)
@@ -169,7 +170,7 @@ void DiveCartesianAxis::updateTicks(int animSpeed)
 	// Guess the number of tick marks.
 	QLineF m = line();
 	double spaceNeeded = position == Position::Bottom ? labelWidth * 3.0 / 2.0
-							  : labelHeight * 2.0;
+						  : labelHeight * 1.45;
 	double size = position == Position::Bottom ? fabs(m.x2() - m.x1())
 						   : fabs(m.y2() - m.y1());
 	int numTicks = lrint(size / spaceNeeded);
@@ -196,6 +197,9 @@ void DiveCartesianAxis::updateTicks(int animSpeed)
 	} else {
 		firstDisplay = floor(minDisplay / intervalDisplay * (1.0 + 1e-5)) * intervalDisplay;
 		lastDisplay = ceil(maxDisplay / intervalDisplay * (1.0 - 1e-5)) * intervalDisplay;
+		// Avoid excessive top padding on depth-like axes when the rounded max is much larger than data max.
+		if (lastDisplay - maxDisplay > intervalDisplay * 0.55)
+			lastDisplay -= intervalDisplay;
 		min = transform.from(firstDisplay);
 		max = transform.from(lastDisplay);
 		firstValue = min;
@@ -223,6 +227,7 @@ void DiveCartesianAxis::updateTicks(int animSpeed)
 		(inverted ? m.y1() + offsetScreen : m.y2() - offsetScreen);
 
 	updateLabels(numTicks, firstPosScreen, firstValue, stepScreen, stepValue, animSpeed, dataMinOld, dataMaxOld);
+	updateMinorTicks(numTicks, firstPosScreen, stepScreen);
 }
 
 
@@ -233,10 +238,17 @@ QPointF DiveCartesianAxis::labelPos(double pos) const
 					      QPointF(rect.right() + labelSpaceHorizontal * dpr, pos);
 }
 
-QLineF DiveCartesianAxis::linePos(double pos) const
+QLineF DiveCartesianAxis::linePos(double pos, bool minorTick) const
 {
-	return position == Position::Bottom ? QLineF(pos, rect.top(), pos, rect.bottom()) :
-					      QLineF(rect.left(), pos, rect.right(), pos);
+	double majorTickLen = 10.0 * dpr;
+	double minorTickLen = 6.0 * dpr;
+	double tickLen = minorTick ? minorTickLen : majorTickLen;
+
+	if (position == Position::Bottom)
+		return QLineF(pos, rect.bottom(), pos, rect.bottom() - tickLen);
+	if (position == Position::Left)
+		return QLineF(rect.left(), pos, rect.left() + tickLen, pos);
+	return QLineF(rect.right(), pos, rect.right() - tickLen, pos);
 }
 
 void DiveCartesianAxis::updateLabel(Label &label, double opacityEnd, double pos) const
@@ -256,7 +268,7 @@ void DiveCartesianAxis::updateLabel(Label &label, double opacityEnd, double pos)
 	}
 	if (label.line) {
 		label.lineStart = label.line->line();
-		label.lineEnd = linePos(pos);
+		label.lineEnd = linePos(pos, false);
 	}
 }
 
@@ -277,11 +289,14 @@ DiveCartesianAxis::Label DiveCartesianAxis::createLabel(double value, double pos
 		label.label->setOpacity(animSpeed <= 0 ? 1.0 : 0.0);
 	}
 	if (lineVisibility) {
-		label.lineStart = linePos(posStart);
-		label.lineEnd = linePos(pos);
+		label.lineStart = linePos(posStart, false);
+		label.lineEnd = linePos(pos, false);
 		label.line = std::make_unique<DiveLineItem>(this);
-		label.line->setPen(gridPen);
-		label.line->setZValue(0);
+		QPen pen = gridPen;
+		pen.setColor(textColor);
+		pen.setWidth(2);
+		label.line->setPen(pen);
+		label.line->setZValue(6);
 		label.line->setLine(animSpeed <= 0 ? label.lineEnd : label.lineStart);
 		label.line->setOpacity(animSpeed <= 0 ? 1.0 : 0.0);
 	}
@@ -337,6 +352,32 @@ void DiveCartesianAxis::updateLabels(int numTicks, double firstPosScreen, double
 	}
 
 	labels = std::move(newLabels);
+}
+
+void DiveCartesianAxis::updateMinorTicks(int numTicks, double firstPosScreen, double stepScreen)
+{
+	minorLines.clear();
+	if (!lineVisibility || numTicks < 2)
+		return;
+
+	const int minorTicksPerInterval = 3;
+	for (int i = 0; i < numTicks - 1; ++i) {
+		double majorPos1 = ((position == Position::Bottom) != inverted) ? firstPosScreen + i * stepScreen : firstPosScreen - i * stepScreen;
+		double majorPos2 = ((position == Position::Bottom) != inverted) ? firstPosScreen + (i + 1) * stepScreen : firstPosScreen - (i + 1) * stepScreen;
+		for (int m = 1; m <= minorTicksPerInterval; ++m) {
+			double t = (double)m / (double)(minorTicksPerInterval + 1);
+			double pos = majorPos1 + (majorPos2 - majorPos1) * t;
+			auto tick = std::make_unique<DiveLineItem>(this);
+			QPen pen = gridPen;
+			pen.setColor(textColor);
+			pen.setWidth(1);
+			tick->setPen(pen);
+			tick->setZValue(5);
+			tick->setLine(linePos(pos, true));
+			tick->setOpacity(0.85);
+			minorLines.push_back(std::move(tick));
+		}
+	}
 }
 
 // Arithmetics with lines. Needed for animations. Operates pointwise.
