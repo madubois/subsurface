@@ -226,6 +226,12 @@ void ProfileWidget::plotCurrentDive()
 	plotDive(d, dc);
 }
 
+static QString diveComputerPreferenceKey(const dive *dive)
+{
+	return QStringLiteral("Profile/DiveComputer/%1-%2")
+		.arg(dive->number).arg(dive->when);
+}
+
 void ProfileWidget::plotDive(dive *dIn, int dcIn)
 {
 	bool endEditMode = false;
@@ -234,12 +240,19 @@ void ProfileWidget::plotDive(dive *dIn, int dcIn)
 
 	d = dIn;
 
-	if (dcIn >= 0)
-		dc = dcIn;
+	if (d) {
+		QSettings settings;
+		if (dcIn >= 0)
+			dc = dcIn;
+		else
+			dc = settings.value(diveComputerPreferenceKey(d), dc).toInt();
 
-	// The following is valid because number_of_computers is always at least 1.
-	if (d)
-		dc = std::min(dc, (int)number_of_computers(current_dive) - 1);
+		// The following is valid because number_of_computers is always at least 1.
+		dc = std::min(dc, (int)number_of_computers(d) - 1);
+		settings.setValue(diveComputerPreferenceKey(d), dc);
+	} else if (dcIn >= 0) {
+		dc = dcIn;
+	}
 
 	// Exit edit mode if the dive changed
 	if (endEditMode)
