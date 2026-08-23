@@ -82,6 +82,11 @@ QToolButton:disabled {
 }
 
 QPushButton[default="true"] {
+	background-color: #1c7c94;
+	color: #ffffff;
+	border: 1px solid #16667a;
+}
+
 QToolButton#profileToggleBarButton {
 	background-color: #f4f8fc;
 	color: #2f4b67;

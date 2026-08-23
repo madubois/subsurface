@@ -250,7 +250,7 @@ Item {
 		transitions: Transition { NumberAnimation { properties: "opacity"; easing.type: Easing.InOutQuad }}
 		Connections {
 			target: rootItem
-			onSiteImageVisibleChanged: editMessage.visible = !rootItem.siteImageVisible && editMessage.opacity != 0.0
+			function onSiteImageVisibleChanged() { editMessage.visible = !rootItem.siteImageVisible && editMessage.opacity != 0.0 }
 		}
 		Text {
 			id: editMessageText
@@ -757,7 +757,7 @@ Item {
 				id: noteItem
 				property bool isNote: modelData.type === "note"
 				property real previewSize: modelData.size || 20
-				property int lineCount: modelData.text.split("\n").length
+				property int lineCount: (modelData.text || "").split("\n").length
 				property real previewWidth: modelData.boxWidth || 0.35
 				property real previewHeight: modelData.boxHeight || 0.2
 				property real resizeStartWidth: previewWidth
@@ -780,7 +780,7 @@ Item {
 				Text {
 					id: noteText
 					anchors.centerIn: parent
-					text: modelData.text
+					text: modelData.text || ""
 					color: "transparent"
 					font.bold: true
 					font.pixelSize: noteItem.previewSize * siteImageContent.scale
@@ -790,7 +790,7 @@ Item {
 					id: noteEditor
 					anchors.fill: parent
 					anchors.margins: 6
-					text: modelData.text
+					text: modelData.text || ""
 					color: "#e53935"
 					font.bold: true
 					font.pixelSize: siteImage.fittedNote({ text: text, size: noteItem.previewSize },
@@ -895,17 +895,17 @@ Item {
 
 		Connections {
 			target: siteImageContent
-			onXChanged: { siteImage.imageTransformRevision++; overlayCanvas.requestPaint() }
-			onYChanged: { siteImage.imageTransformRevision++; overlayCanvas.requestPaint() }
-			onScaleChanged: { siteImage.imageTransformRevision++; overlayCanvas.requestPaint() }
-			onWidthChanged: { siteImage.imageTransformRevision++; overlayCanvas.requestPaint() }
-			onHeightChanged: { siteImage.imageTransformRevision++; overlayCanvas.requestPaint() }
+			function onXChanged() { siteImage.imageTransformRevision++; overlayCanvas.requestPaint() }
+			function onYChanged() { siteImage.imageTransformRevision++; overlayCanvas.requestPaint() }
+			function onScaleChanged() { siteImage.imageTransformRevision++; overlayCanvas.requestPaint() }
+			function onWidthChanged() { siteImage.imageTransformRevision++; overlayCanvas.requestPaint() }
+			function onHeightChanged() { siteImage.imageTransformRevision++; overlayCanvas.requestPaint() }
 		}
 
 		Connections {
 			target: siteImage
-			onWidthChanged: { siteImage.imageTransformRevision++; overlayCanvas.requestPaint() }
-			onHeightChanged: { siteImage.imageTransformRevision++; overlayCanvas.requestPaint() }
+			function onWidthChanged() { siteImage.imageTransformRevision++; overlayCanvas.requestPaint() }
+			function onHeightChanged() { siteImage.imageTransformRevision++; overlayCanvas.requestPaint() }
 		}
 
 		property bool restoringViewState: false
@@ -1005,14 +1005,14 @@ Item {
 
 		Connections {
 			target: mapHelper
-			onSiteImagePathChanged: {
+			function onSiteImagePathChanged() {
 				siteImageContent.source = ""
 				siteImageContent.source = mapHelper.siteImageUrl
 				siteImage.restoreOverlay()
 				siteImage.restoreViewState()
 			}
-				onDiveImageOverlayChanged: siteImage.restoreOverlay()
-				onCurrentDiveChanged: siteImage.restoreOverlay()
+			function onDiveImageOverlayChanged() { siteImage.restoreOverlay() }
+			function onCurrentDiveChanged() { siteImage.restoreOverlay() }
 		}
 
 		Component.onCompleted: restoreOverlay()
