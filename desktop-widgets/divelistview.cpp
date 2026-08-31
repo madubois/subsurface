@@ -86,6 +86,10 @@ DiveListView::DiveListView(QWidget *parent) : QTreeView(parent),
 		setColumnHidden(i, !shown);
 	}
 	s.endGroup();
+	QSettings headerSettings;
+	headerSettings.beginGroup("ListWidget");
+	header()->restoreState(headerSettings.value("headerState").toByteArray());
+	headerSettings.endGroup();
 }
 
 DiveListView::~DiveListView()
@@ -103,6 +107,7 @@ DiveListView::~DiveListView()
 			settings.setValue(QString("colwidth%1").arg(i), columnWidth(i));
 	}
 	settings.remove(QString("colwidth%1").arg(DiveTripModelBase::COLUMNS - 1));
+	settings.setValue("headerState", header()->saveState());
 	settings.endGroup();
 }
 

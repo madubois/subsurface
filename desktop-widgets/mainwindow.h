@@ -147,9 +147,6 @@ slots:
 protected:
 	void closeEvent(QCloseEvent *);
 
-signals:
-	void showError(QString message);
-
 public
 slots:
 	void readSettings();

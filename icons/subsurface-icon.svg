@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1152 768" width="1152" height="768">
-  <rect width="1152" height="768" fill="#000"/>
-  <polygon points="20,21 116,21 999,680 999,751 899,751 20,115" fill="#fff"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <rect width="1024" height="1024" rx="176" ry="176" fill="#000"/>
+  <path d="M 140,4 A 176,176 0 0,0 4,140 L 884,1020 A 176,176 0 0,0 1020,884 Z" fill="#fff"/>
 </svg>

@@ -121,13 +121,6 @@ extern "C" int updateProgress(const char *text)
 
 MainWindow *MainWindow::m_Instance = nullptr;
 
-extern "C" void showErrorFromC(char *buf)
-{
-	QString error(buf);
-	free(buf);
-	emit MainWindow::instance()->showError(error);
-}
-
 MainWindow::MainWindow() :
 	appState((ApplicationState)-1), // Invalid state
 	actionNextDive(nullptr),
@@ -200,7 +193,6 @@ MainWindow::MainWindow() :
 	ui.menuFile->insertSeparator(ui.actionQuit);
 	connect(DivePlannerPointsModel::instance(), SIGNAL(planCreated()), this, SLOT(planCreated()));
 	connect(DivePlannerPointsModel::instance(), SIGNAL(planCanceled()), this, SLOT(planCanceled()));
-	connect(this, &MainWindow::showError, ui.mainErrorMessage, &NotificationWidget::showError, Qt::AutoConnection);
 
 	connect(&windowTitleUpdate, &WindowTitleUpdate::updateTitle, this, &MainWindow::setAutomaticTitle);
 	connect(&diveListNotifier, &DiveListNotifier::numShownChanged, this, &MainWindow::setAutomaticTitle);
@@ -258,7 +250,6 @@ MainWindow::MainWindow() :
 
 	setupSocialNetworkMenu();
 	set_git_update_cb(&updateProgress);
-	set_error_cb(&showErrorFromC);
 
 // full screen support is buggy on Windows and Ubuntu.
 // require the FULLSCREEN_SUPPORT macro to enable it!
