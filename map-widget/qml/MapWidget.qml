@@ -21,8 +21,7 @@ Item {
 		onCoordinatesChanged: {}
 		Component.onCompleted: {
 			map.plugin = Qt.createQmlObject(pluginObject, rootItem)
-			map.mapType = { "STREET": map.supportedMapTypes[0], "SATELLITE": map.supportedMapTypes[1] }
-			map.activeMapType = map.mapType.SATELLITE
+			map.initializeMapTypes()
 		}
 	}
 
@@ -44,7 +43,24 @@ Item {
 		property var clickCoord: QtPositioning.coordinate(0, 0)
 		property bool isReady: false
 
+		function initializeMapTypes() {
+			if (supportedMapTypes.length === 0)
+				return
+			var streetMapType = supportedMapTypes[0]
+			if (plugin.name === "osm") {
+				for (var index = 0; index < supportedMapTypes.length; ++index) {
+					if (supportedMapTypes[index].style === MapType.CustomMap) {
+						streetMapType = supportedMapTypes[index]
+						break
+					}
+				}
+			}
+			mapType = { "STREET": streetMapType, "SATELLITE": supportedMapTypes[1] }
+			activeMapType = mapType.STREET
+		}
+
 		Component.onCompleted: isReady = true
+		onSupportedMapTypesChanged: initializeMapTypes()
 		onZoomLevelChanged: {
 			if (isReady)
 				mapHelper.calculateSmallCircleRadius(map.center)
@@ -267,8 +283,8 @@ Item {
 		x: 10; y: x
 		width: 40
 		height: 40
-		source: "qrc:///map-style-" + (map.activeMapType === map.mapType.SATELLITE ? "map" : "photo") + "-icon"
-		visible: !rootItem.siteImageVisible
+		source: "qrc:///map-style-" + (map.mapType && map.activeMapType === map.mapType.SATELLITE ? "map" : "photo") + "-icon"
+		visible: !rootItem.siteImageVisible && map.plugin.name !== "osm" && map.mapType !== undefined && map.mapType.SATELLITE !== undefined
 		SequentialAnimation {
 			id: toggleImageAnimation
 			PropertyAnimation { target: toggleImage; property: "scale"; from: 1.0; to: 0.8; duration: 120 }

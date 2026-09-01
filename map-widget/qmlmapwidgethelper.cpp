@@ -477,6 +477,16 @@ bool MapWidgetHelper::editMode() const
 
 QString MapWidgetHelper::pluginObject()
 {
+	#ifndef SUBSURFACE_MOBILE
+		return QStringLiteral("import QtQuick 2.0;"
+				      "import QtLocation 5.3;"
+				      "Plugin {"
+				      "    name: 'osm';"
+				      "    PluginParameter { name: 'osm.mapping.providersrepository.disabled'; value: true }"
+				      "    PluginParameter { name: 'osm.mapping.custom.host'; value: 'https://tile.openstreetmap.org/' }"
+				      "}");
+	#endif
+
 	QString lang = getUiLanguage().replace('_', '-');
 	QString cacheFolder = QString(system_default_directory()).append("/googlemaps").replace("\\", "/");
 	return QStringLiteral("import QtQuick 2.0;"

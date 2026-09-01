@@ -380,13 +380,24 @@ void LocationInformationWidget::on_clearImageButton_clicked()
 	Command::editDiveSiteImagePath(diveSite, QString());
 }
 
-DiveLocationFilterProxyModel::DiveLocationFilterProxyModel(QObject *) : currentLocation(zero_location)
+DiveLocationFilterProxyModel::DiveLocationFilterProxyModel(QObject *) : hasMatchingSite(false), currentLocation(zero_location)
 {
 }
 
 void DiveLocationFilterProxyModel::setFilter(const QString &filterIn)
 {
 	filter = filterIn;
+	hasMatchingSite = false;
+	if (!filter.isEmpty()) {
+		int index;
+		struct dive_site *site;
+		for_each_dive_site(index, site, divelog.sites) {
+			if (QString(site->name).contains(filter, Qt::CaseInsensitive)) {
+				hasMatchingSite = true;
+				break;
+			}
+		}
+	}
 	invalidate();
 	sort(LocationInformationModel::NAME);
 }
@@ -413,9 +424,12 @@ bool DiveLocationFilterProxyModel::filterAcceptsRow(int source_row, const QModel
 
 bool DiveLocationFilterProxyModel::lessThan(const QModelIndex &source_left, const QModelIndex &source_right) const
 {
-	// The first two entries are special - we never want to change their order
-	if (source_left.row() <= 1 || source_right.row() <= 1)
+	bool leftIsNewSite = source_left.row() <= 1;
+	bool rightIsNewSite = source_right.row() <= 1;
+	if (leftIsNewSite && rightIsNewSite)
 		return source_left.row() < source_right.row();
+	if (leftIsNewSite || rightIsNewSite)
+		return leftIsNewSite != hasMatchingSite;
 
 	// If there is a current location, sort by that - otherwise use the provided column
 	if (has_location(&currentLocation)) {
